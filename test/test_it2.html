@@ -1,0 +1,2832 @@
+<html>
+<body>
+  <div id="result"></div>
+
+  <script src="./testutil.js"></script>
+  <script src="../dist/js/browser/SLII.js"></script>
+
+  <script>
+
+    var test_data = { key1: "a", key2: 100, key3: 200, key4: 300 };
+
+    var test_keys_t1 = ["key1", "key2", "key3", "key4"],
+        test_values_t1 = [
+          ["a", 50, 210, 100],
+          ["b", 100, 120, 150],
+          ["a", 100, 200, 300],
+          ["d", 300, 400, 500],
+          ["c", 100, 300, 200],
+          ["a", 220, 100, 100],
+          ["a", 100, 310, 400],
+          ["c", 100, 250, 200],
+          ["c", 110, 250, 200],
+          ["d", 100, 200, 300],
+          ["d", 200, 300, 400]
+        ],
+        test_keys_t2 = ["keyA", "keyB"],
+        test_values_t2 = [
+          ["a", 100],
+          ["b", 200],
+          ["c", 300],
+          ["d", 400],
+          ["e", 500],
+          ["a", null]
+        ],
+        test_keys_t3 = ["keyX", "keyY", "keyZ"],
+        test_values_t3 = [
+          ["a", 10, 20],
+          ["d", 50, 60],
+          ["b", 30, 40],
+          ["a", 20, 30],
+          ["b", 40, 50],
+          ["d", 60, 70]
+        ];
+    var mock_table1 = [],
+        mock_table2 = [],
+        mock_table3 = [];
+
+    var i = 0, l = 0,
+        j = 0, l2 = 0,
+        data = {};
+    // create mock_table1
+    for(i = 0, l = test_values_t1.length; i < l; i = i + 1) {
+      data = {};
+      for(j = 0, l2 = test_keys_t1.length; j < l2; j = j + 1) {
+        data[test_keys_t1[j]] = test_values_t1[i][j];
+      }
+      mock_table1[mock_table1.length] = data;
+    }
+    // create mock_table2
+    for(i = 0, l = test_values_t2.length; i < l; i = i + 1) {
+      data = {};
+      for(j = 0, l2 = test_keys_t2.length; j < l2; j = j + 1) {
+        data[test_keys_t2[j]] = test_values_t2[i][j];
+      }
+      mock_table2[mock_table2.length] = data;
+    }
+    // create mock_table3
+    for(i = 0, l = test_values_t3.length; i < l; i = i + 1) {
+      data = {};
+      for(j = 0, l2 = test_keys_t3.length; j < l2; j = j + 1) {
+        data[test_keys_t3[j]] = test_values_t3[i][j];
+      }
+      mock_table3[mock_table3.length] = data;
+    }
+
+
+    var confirm_version = 0;
+
+    var slii = null;
+    slii = new SLII("test");
+    slii.deleteDatabase();
+
+    test("test 1-1-1 - open", function(done) {
+      slii.open()
+      .then(function(db) {
+        var result1 = slii.getCurrentVersion() === ++confirm_version;
+        var result2 = match_array(db.objectStoreNames, []);
+
+        done(result1 && result2);
+      });
+    })
+
+    // ########################################################
+
+    .then(function() {
+      return test("test 1-2-1 - createTable", function(done) {
+        slii.createTable("table1")
+        .run(/*function(table, end, error) {
+          end();
+        }*/)
+        .then(function() {
+          var result1 = slii.getCurrentVersion() === ++confirm_version;
+          var result2 = match_array(slii.db.objectStoreNames, ["table1"]);
+
+          done(result1 && result2);
+          //done(true);
+        })
+        .catch(function(err) {
+          console.error(err);
+        });
+      });
+    })
+
+    // ########################################################
+
+    .then(function() {
+      return test("test 1-3-1 - dropTable", function(done) {
+        slii.dropTable("table1")
+        .run(/*function(ret, end, error) {
+          end();
+        }*/)
+        .then(function() {
+          var result1 = slii.getCurrentVersion() === ++confirm_version;
+          var result2 = match_array(slii.db.objectStoreNames, []);
+
+          done(result1 && result2);
+        })
+        .catch(function(err) {
+          console.error(err);
+        });
+      });
+    })
+
+    // ########################################################
+
+    .then(function() {
+      return test("test 1-4-1 - createTable", function(done) {
+        slii.upgrade(function(db) {
+          slii.createTable("table1").run();
+          slii.createTable("table2").run();
+          slii.createTable("table3").run();
+        })
+        .then(function() {
+          var result1 = slii.getCurrentVersion() === ++confirm_version;
+          var result2 = match_array(slii.db.objectStoreNames, ["table1", "table2", "table3"]);
+
+          done(result1 && result2);
+        })
+        .catch(function(err) {
+          console.error(err);
+        })
+      });
+    })
+
+    // ########################################################
+
+    .then(function() {
+      return test("test 1-5-1 - createIndex", function(done) {
+        slii.createIndex("table1", "table1_idx1", ["key1", "key2"])
+        .run(/*function(ret, end, error) {
+          end();
+        }*/)
+        .then(function() {
+          var result1 = slii.getCurrentVersion() === ++confirm_version;
+          var result2 = match_array(
+            slii.db.transaction("table1").objectStore("table1").indexNames,
+            ["table1_idx1"]
+          );
+
+          done(result1 && result2);
+        })
+        .catch(function(err) {
+          console.error(err);
+        });
+      });
+    })
+
+    // ########################################################
+
+    .then(function() {
+      return test("test 1-6-1 - dropIndex", function(done) {
+        slii.dropIndex("table1", "table1_idx1")
+        .run(/*function(ret, end, error) {
+          console.log("index drop");
+          end();
+        }*/)
+        .then(function() {
+          var result1 = slii.getCurrentVersion() === ++confirm_version;
+          var result2 = match_array(
+            slii.db.transaction("table1").objectStore("table1").indexNames,
+            []
+          );
+
+          done(result1 && result2);
+        })
+        .catch(function(err) {
+          console.error(err);
+        });
+      });
+    })
+
+    .then(function() {
+      return slii.createIndex("table1", "table1_idx1", ["key1", "key2"]).run()
+      .then(function() {
+        return slii.createIndex("table1", "table1_idx2", ["key3"]).run();
+      })
+      .catch(function(err) { console.log(err); });
+    })
+
+    // ########################################################
+
+    .then(function() {
+      return test("test 1-7-1 - insert_into.values(...)", function(done) {
+        var test_keys = ["key1", "key2", "key3", "key4"],
+            test_values = ["a", 100, 200, 300],
+            ret = [],
+            check_data = [test_data];
+
+        var query = slii.insert_into(
+          "table1",
+          ["key1", "key2", "key3", "key4"]
+        )
+        .values(
+          "a", 100, 200, 300
+        );
+
+        query.run(function(n, fulfill/*, reject*/) {
+          var req = slii.db.transaction("table1", "readonly").objectStore("table1").openCursor();
+
+          req.onsuccess = function(e) {
+            var cursor = e.target.result;
+
+            if(cursor) {
+              ret[ret.length] = cursor.value;
+              cursor.continue();
+
+            } else {
+              fulfill();
+            }
+          };
+        })
+        .then(function() {
+          var test_result = true,
+              compared = false;
+
+          for(var i = 0, l = ret.length; i < l; i = i + 1) {
+            comapred = true;
+            test_result = match_object(ret[i], check_data[i]);
+
+            if(!test_result) {
+              break;
+            }
+          }
+
+          done(test_result && comapred);
+        });
+      });
+    })
+
+    // ########################################################
+
+    .then(function() {
+      return test("test 1-8-1 - delete_from", function(done) {
+        var ret = [];
+
+        var query = slii.delete_from("table1");
+
+        query.run(function(n, fulfill) {
+          var req = slii.db.transaction("table1", "readonly").objectStore("table1").openCursor();
+
+          req.onsuccess = function(e) {
+            var cursor = e.target.result;
+
+            if(cursor) {
+              ret[ret.length] = cursor.value;
+              cursor.continue();
+
+            } else {
+              fulfill();
+            }
+          }
+        })
+        .then(function() {
+          done(ret.length === 0);
+        });
+      });
+    })
+
+    // ########################################################
+
+    .then(function() {
+      return test("test 1-9-1 - insert_into.values(obj)", function(done) {
+        var ret = [],
+            check_data = [test_data];
+
+        slii.insert_into("table1").values(test_data)
+        .run(function(n, fulfill) {
+          var req = slii.db.transaction("table1", "readonly").objectStore("table1").openCursor();
+
+          req.onsuccess = function(e) {
+            var cursor = e.target.result;
+
+            if(cursor) {
+              ret[ret.length] = cursor.value;
+              cursor.continue();
+
+            } else {
+              fulfill();
+            }
+          }
+        })
+        .then(function() {
+          var test_result = true,
+              compared = false;
+
+          for(var i = 0, l = ret.length; i < l; i = i + 1) {
+            compared = true;
+            test_result = match_object(ret[i], check_data[i]);
+
+            if(!test_result) {
+              console.log("unmatch:");
+              console.log(JSON.stringify(ret[i]));
+              console.log(JSON.stringify(check_data[i]));
+              break;
+            }
+          }
+
+          done(test_result && compared);
+        })
+        .catch(function(err) {
+          console.error(err);
+        });
+      });
+    })
+
+    // ########################################################
+
+    // Safari not work: 2015/11/08
+    .then(function() {
+      return test("test 1-10-1 - transaction rollback", function(done) {
+        slii.beginTransaction(["table1", "table2", "table3"], "readwrite", function() {
+          slii.delete_from("table1").run();
+          slii.insert_into("table1", test_keys_t1).values(test_values_t1[0]).run();
+          slii.insert_into("table1", test_keys_t1).values(test_values_t1[1]).run();
+          slii.insert_into("table1", test_keys_t1).values(test_values_t1[2]).run();
+          slii.insert_into("table1", test_keys_t1).values(test_values_t1[3]).run();
+          slii.insert_into("table1", test_keys_t1).values(test_values_t1[4]).run();
+          slii.insert_into("table1", test_keys_t1).values(test_values_t1[5]).run();
+          slii.insert_into("table1", test_keys_t1).values(test_values_t1[6]).run();
+          slii.insert_into("table1", test_keys_t1).values(test_values_t1[7]).run();
+          slii.insert_into("table1", test_keys_t1).values(test_values_t1[8]).run();
+          slii.insert_into("table1", test_keys_t1).values(test_values_t1[9]).run(),
+          slii.insert_into("table1", test_keys_t1).values(test_values_t1[10]).run(),
+          slii.insert_into("table2", test_keys_t2).values(test_values_t2[0]).run(),
+          slii.insert_into("table2", test_keys_t2).values(test_values_t2[1]).run(),
+          slii.insert_into("table2", test_keys_t2).values(test_values_t2[2]).run(),
+          slii.insert_into("table2", test_keys_t2).values(test_values_t2[3]).run(),
+          slii.insert_into("table2", test_keys_t2).values(test_values_t2[4]).run(),
+          slii.insert_into("table2", test_keys_t2).values(test_values_t2[5]).run(),
+          slii.insert_into("table3", test_keys_t3).values(test_values_t3[0]).run(),
+          slii.insert_into("table3", test_keys_t3).values(test_values_t3[1]).run(),
+          slii.insert_into("table3", test_keys_t3).values(test_values_t3[2]).run(),
+          slii.insert_into("table3", test_keys_t3).values(test_values_t3[3]).run(),
+          slii.insert_into("table3", test_keys_t3).values(test_values_t3[4]).run(),
+          slii.insert_into("table3", test_keys_t3).values(test_values_t3[5]).run();
+
+          slii.addTask(null, function() {
+            slii.rollback();
+          });
+          //throw new Error("throw Error in transaction");
+        })
+        .then(function() {
+          done(false);
+        })
+        .catch(function(err) {
+          console.error(err);
+
+          // auto rollback
+          var check_data1 = [test_data],
+              check_data2 = [],
+              check_data3 = [],
+              rows1 = [],
+              rows2 = [],
+              rows3 = [];
+
+          new Promise(function(fulfill, reject) {
+            var req = slii.db.transaction("table1", "readonly").objectStore("table1").openCursor();
+
+            req.onsuccess = function(e) {
+              var cursor = e.target.result;
+
+              if(cursor) {
+                rows1[rows1.length] = cursor.value;
+                cursor.continue();
+              } else {
+                fulfill();
+              }
+            };
+          })
+          .then(function() {
+            return new Promise(function(fulfill, reject) {
+              var req = slii.db.transaction("table2", "readonly").objectStore("table2").openCursor();
+
+              req.onsuccess = function(e) {
+                var cursor = e.target.result;
+
+                if(cursor) {
+                  rows2[rows2.length] = cursor.value;
+                  cursor.continue();
+                } else {
+                  fulfill();
+                }
+              }
+            });
+          })
+          .then(function() {
+            return new Promise(function(fulfill, reject) {
+              var req = slii.db.transaction("table3", "readonly").objectStore("table3").openCursor();
+
+              req.onsuccess = function(e) {
+                var cursor = e.target.result;
+
+                if(cursor) {
+                  rows3[rows3.length] = cursor.value;
+                  cursor.continue();
+                } else {
+                  fulfill();
+                }
+              }
+            });
+          })
+          .then(function() {
+            var test_result1 = true,
+                test_result2 = true,
+                test_result3 = true,
+                compared = false;
+
+            for(var i = 0, l = rows1.length; i < l; i = i + 1) {
+              compared = true;
+              test_result1 = match_object(rows1[i], check_data1[i]);
+
+              if(!test_result1) {
+                console.log("unmatch:");
+                console.log(JSON.stringify(rows1[i]));
+                console.log(JSON.stringify(check_data[i]));
+                break;
+              }
+            }
+            test_result2 = match_array(rows2, check_data2);
+            test_result3 = match_array(rows3, check_data3);
+
+            done(test_result1 && compared && test_result2 && test_result3);
+          })
+        });
+      });
+    })
+    // for Safari
+    .then(function() {
+      return test("test 1-10-2 - transaction rollback for Safari", function(done) {
+        slii.beginTransaction("table1", "readwrite", function() {
+          slii.delete_from("table1").run();
+          slii.insert_into("table1", test_keys_t1).values(test_values_t1[0]).run();
+          slii.insert_into("table1", test_keys_t1).values(test_values_t1[1]).run();
+          slii.insert_into("table1", test_keys_t1).values(test_values_t1[2]).run();
+          slii.insert_into("table1", test_keys_t1).values(test_values_t1[3]).run();
+          slii.insert_into("table1", test_keys_t1).values(test_values_t1[4]).run();
+          slii.insert_into("table1", test_keys_t1).values(test_values_t1[5]).run();
+          slii.insert_into("table1", test_keys_t1).values(test_values_t1[6]).run();
+          slii.insert_into("table1", test_keys_t1).values(test_values_t1[7]).run();
+          slii.insert_into("table1", test_keys_t1).values(test_values_t1[8]).run();
+          slii.insert_into("table1", test_keys_t1).values(test_values_t1[9]).run(),
+          slii.insert_into("table1", test_keys_t1).values(test_values_t1[10]).run(),
+
+          slii.addTask(null, function() {
+            slii.rollback();
+          });
+          //throw new Error("throw Error in transaction");
+        })
+        .then(function() {
+          done(false);
+        })
+        .catch(function(err) {
+          console.error(err);
+
+          // auto rollback
+          var check_data1 = [test_data],
+              rows1 = [];
+
+          new Promise(function(fulfill, reject) {
+            var req = slii.db.transaction("table1", "readonly").objectStore("table1").openCursor();
+
+            req.onsuccess = function(e) {
+              var cursor = e.target.result;
+
+              if(cursor) {
+                rows1[rows1.length] = cursor.value;
+                cursor.continue();
+              } else {
+                fulfill();
+              }
+            };
+          })
+          .then(function() {
+            var test_result1 = true,
+                compared = false;
+            for(var i = 0, l = rows1.length; i < l; i = i + 1) {
+              compared = true;
+              test_result1 = match_object(rows1[i], check_data1[i]);
+
+              if(!test_result1) {
+                console.log("unmatch:");
+                console.log(JSON.stringify(rows1[i]));
+                console.log(JSON.stringify(check_data1[i]));
+                break;
+              }
+            }
+
+            done(test_result1 && compared);
+          })
+        });
+      });
+    })
+
+    // ########################################################
+
+    .then(function() {
+      return test("test 1-11-1 - transaction insert_into.values", function(done) {
+        var rows1 = [],
+            rows2 = [],
+            rows3 = [];
+
+        slii.beginTransaction("table1", "readwrite", function() {
+          slii.delete_from("table1").run();
+          slii.insert_into("table1", test_keys_t1).values(test_values_t1[0]).run();
+          slii.insert_into("table1", test_keys_t1).values(test_values_t1[1]).run();
+          slii.insert_into("table1", test_keys_t1).values(test_values_t1[2]).run();
+          slii.insert_into("table1", test_keys_t1).values(test_values_t1[3]).run();
+          slii.insert_into("table1", test_keys_t1).values(test_values_t1[4]).run();
+          slii.insert_into("table1", test_keys_t1).values(test_values_t1[5]).run();
+          slii.insert_into("table1", test_keys_t1).values(test_values_t1[6]).run();
+          slii.insert_into("table1", test_keys_t1).values(test_values_t1[7]).run();
+          slii.insert_into("table1", test_keys_t1).values(test_values_t1[8]).run();
+          slii.insert_into("table1", test_keys_t1).values(test_values_t1[9]).run(),
+          slii.insert_into("table1", test_keys_t1).values(test_values_t1[10]).run();
+        })
+        .then(function() {
+          return slii.beginTransaction(["table2"], "readwrite", function() {
+            slii.insert_into("table2", test_keys_t2).values(test_values_t2[0]).run(),
+            slii.insert_into("table2", test_keys_t2).values(test_values_t2[1]).run(),
+            slii.insert_into("table2", test_keys_t2).values(test_values_t2[2]).run(),
+            slii.insert_into("table2", test_keys_t2).values(test_values_t2[3]).run(),
+            slii.insert_into("table2", test_keys_t2).values(test_values_t2[4]).run(),
+            slii.insert_into("table2", test_keys_t2).values(test_values_t2[5]).run();
+          });
+        })
+        .then(function() {
+          return slii.beginTransaction("table3", "readwrite", function() {
+            slii.insert_into("table3", test_keys_t3).values(test_values_t3[0]).run(),
+            slii.insert_into("table3", test_keys_t3).values(test_values_t3[1]).run(),
+            slii.insert_into("table3", test_keys_t3).values(test_values_t3[2]).run(),
+            slii.insert_into("table3", test_keys_t3).values(test_values_t3[3]).run(),
+            slii.insert_into("table3", test_keys_t3).values(test_values_t3[4]).run(),
+            slii.insert_into("table3", test_keys_t3).values(test_values_t3[5]).run();
+          });
+        })
+        .then(function() {
+          return new Promise(function(fulfill, reject) {
+            var req = slii.db.transaction("table1", "readwrite").objectStore("table1").openCursor();
+
+            req.onsuccess = function(e) {
+              var cursor = e.target.result;
+
+              if(cursor) {
+                rows1[rows1.length] = cursor.value;
+                cursor.continue();
+              } else {
+                fulfill();
+              }
+            };
+          });
+        })
+        .then(function() {
+          return new Promise(function(fulfill, reject) {
+            var req = slii.db.transaction("table2", "readwrite").objectStore("table2").openCursor();
+
+            req.onsuccess = function(e) {
+              var cursor = e.target.result;
+
+              if(cursor) {
+                rows2[rows2.length] = cursor.value;
+                cursor.continue();
+              } else {
+                fulfill();
+              }
+            };
+          });
+        })
+        .then(function() {
+          return new Promise(function(fulfill, reject) {
+            var req = slii.db.transaction("table3", "readwrite").objectStore("table3").openCursor();
+
+            req.onsuccess = function(e) {
+              var cursor = e.target.result;
+
+              if(cursor) {
+                rows3[rows3.length] = cursor.value;
+                cursor.continue();
+              } else {
+                fulfill();
+              }
+            };
+          })
+        })
+        .then(function() {
+          var test_result1 = true,
+              test_result2 = true,
+              test_result3 = true,
+              compared1 = false,
+              compared2 = false,
+              compared3 = false;
+
+          for(var i = 0, l = rows1.length; i < l; i = i + 1) {
+            compared1 = true;
+            test_result1 = match_object(rows1[i], mock_table1[i]);
+
+            if(!test_result1) {
+              console.log("unmatch:");
+              console.log(JSON.stringify(rows1[i]));
+              console.log(JSON.stringify(check_data1[i]));
+              break;
+            }
+          }
+          for(var i = 0, l = rows2.length; i < l; i = i + 1) {
+            compared2 = true;
+            test_result2 = match_object(rows2[i], mock_table2[i]);
+
+            if(!test_result2) {
+              console.log("unmatch:");
+              console.log(JSON.stringify(rows2[i]));
+              console.log(JSON.stringify(mock_table2[i]));
+              break;
+            }
+          }
+          for(var i = 0, l = rows3.length; i < l; i = i + 1) {
+            compared3 = true;
+            test_result3 = match_object(rows3[i], mock_table3[i]);
+
+            if(!test_result3) {
+              console.log("unmatch:");
+              console.log(JSON.stringify(rows3[i]));
+              console.log(JSON.stringify(mock_table3[i]));
+              break;
+            }
+          }
+
+          done(test_result1 && compared1 && test_result2 && compared2 && test_result3 && compared3);
+        });
+      });
+    })
+
+    // ########################################################
+
+    .then(function() {
+      return test("test 1-12-1 - delete_from.where", function(done) {
+        var rows1 = [],
+            delete_count = 0;
+
+        var query = slii
+        .delete_from("table1")
+        .where(function($) {
+          $.and("key1").eq.value("d")
+           .and("key2").between(150, 250);
+        });
+
+        query.run(function(n) {
+          new Promise(function(fulfill, reject) {
+            var tmp_table = [];
+
+            for(var i = 0, l = mock_table1.length; i < l; i = i + 1) {
+              if(mock_table1[i].key1 === "d" && mock_table1[i].key2 >= 150 && mock_table1[i].key2 <= 250) {
+                delete_count++;
+              } else {
+                tmp_table[tmp_table.length] = mock_table1[i];
+              }
+            }
+
+            mock_table1 = tmp_table;
+
+            var req = slii.db.transaction("table1", "readwrite").objectStore("table1").openCursor();
+
+            req.onsuccess = function(e) {
+              var cursor = e.target.result;
+
+              if(cursor) {
+                rows1[rows1.length] = cursor.value;
+                cursor.continue();
+              } else {
+                fulfill();
+              }
+            };
+          })
+          .then(function() {
+            var test_result = true,
+                compared = false;
+
+            for(var i = 0, l = rows1.length; i < l; i = i + 1) {
+              compared = true;
+              test_result = match_object(rows1[i], mock_table1[i]);
+
+              if(!test_result) {
+                console.log("unmatch:");
+                console.log(JSON.stringify(rows1[i]));
+                console.log(JSON.stringify(mock_table1[i]));
+                break;
+              }
+            }
+
+            done(test_result && compared && delete_count === n);
+          });
+        });
+      });
+    })
+
+    // ########################################################
+
+    .then(function() {
+      return test("test 1-13-1 - update.set", function(done) {
+        var rows1 = [],
+            update_count = 0;
+
+        var query = slii
+        .update("table3")
+        .set({ keyZ: 200 });
+
+        query.run(function(n) {
+          new Promise(function(fulfill, reject) {
+            var tmp_table = [];
+
+            for(var i = 0, l = mock_table3.length; i < l; i = i + 1) {
+              mock_table3[i].keyZ = 200;
+              tmp_table[tmp_table.length] = mock_table3[i];
+              update_count++;
+            }
+
+            mock_table3 = tmp_table;
+
+            var req = slii.db.transaction("table3", "readwrite").objectStore("table3").openCursor();
+
+            req.onsuccess = function(e) {
+              var cursor = e.target.result;
+
+              if(cursor) {
+                rows1[rows1.length] = cursor.value;
+                cursor.continue();
+              } else {
+                fulfill();
+              }
+            }
+          })
+          .then(function() {
+            var test_result = true,
+                compared = false;
+
+            for(var i = 0, l = rows1.length; i < l; i = i + 1) {
+              compared = true;
+              test_result = match_object(rows1[i], mock_table3[i]);
+
+              if(!test_result) {
+                console.log("unmatch:");
+                console.log(JSON.stringify(rows1[i]));
+                console.log(JSON.stringify(mock_table3[i]));
+                break;
+              }
+            }
+
+            done(test_result && compared && update_count === n);
+          });
+        });
+      });
+    })
+
+    // ########################################################
+
+    .then(function() {
+      return test("test 1-14-1 - update.set.where", function(done) {
+        var rows1 = [],
+            update_count = 0;
+
+        var query = slii
+        .update("table3")
+        .set({ keyZ: 300 })
+        .where(function($) {
+          $.and("keyX").eq.value("a")
+           .and("keyY").eq.value(10);
+        });
+
+        query.run(function(n) {
+          new Promise(function(fulfill, reject) {
+            var tmp_table = [];
+
+            for(var i = 0, l = mock_table3.length; i < l; i = i + 1) {
+              if(mock_table3[i].keyX === "a" && mock_table3[i].keyY === 10) {
+                update_count++;
+                mock_table3[i].keyZ = 300;
+              }
+              tmp_table[tmp_table.length] = mock_table3[i];
+            }
+
+            mock_table3 = tmp_table;
+
+            var req = slii.db.transaction("table3", "readwrite").objectStore("table3").openCursor();
+
+            req.onsuccess = function(e) {
+              var cursor = e.target.result;
+
+              if(cursor) {
+                rows1[rows1.length] = cursor.value;
+                cursor.continue();
+              } else {
+                fulfill();
+              }
+            }
+          })
+          .then(function() {
+            var test_result = true,
+                compared = false;
+
+            for(var i = 0, l = rows1.length; i < l; i = i + 1) {
+              compared = true;
+              test_result = match_object(rows1[i], mock_table3[i]);
+
+              if(!test_result) {
+                console.log("unmatch:");
+                console.log(JSON.stringify(rows1[i]));
+                console.log(JSON.stringify(mock_table3[i]));
+                break;
+              }
+            }
+
+            done(test_result && compared && update_count === n);
+          });
+        });
+      });
+    })
+
+    // ########################################################
+
+    .then(function() {
+      return test("test 1-15-1 - select.from", function(done) {
+        var check_data = []
+
+        var query = slii
+        .select(function($, _) {
+          $(_.key1);
+          $(_.key2);
+          $(_.key3);
+        })
+        .from("table1");
+
+        query.run(function(rows) {
+          new Promise(function(fulfill, reject) {
+            for(var i = 0, l = mock_table1.length; i < l; i = i + 1) {
+              check_data[check_data.length] = {
+                "0": mock_table1[i].key1,
+                "1": mock_table1[i].key2,
+                "2": mock_table1[i].key3
+              };
+            }
+
+            fulfill();
+          })
+          .then(function() {
+            var test_result = true,
+                match_length = rows.length === check_data.length,
+                compared = false;
+
+            for(var i = 0, l = rows.length; i < l; i = i + 1) {
+              compared = true;
+              test_result = match_object(rows[i], check_data[i]);
+
+              if(!test_result) {
+                console.log("unmatch:");
+                console.log(JSON.stringify(rows[i]));
+                console.log(JSON.stringify(check_data[i]));
+                break;
+              }
+            }
+
+            done(test_result && match_length && compared);
+          });
+        });
+      });
+    })
+    .then(function() {
+      return test("test 1-15-2 - select(as).from", function(done) {
+        var check_data = []
+
+        var query = slii
+        .select(function($, _) {
+          $(_.key1).as("key1");
+          $(_.key2).as("key2");
+          $(_.key3).as("key3");
+        })
+        .from("table1");
+
+        query.run(function(rows) {
+          new Promise(function(fulfill, reject) {
+            for(var i = 0, l = mock_table1.length; i < l; i = i + 1) {
+              check_data[check_data.length] = {
+                key1: mock_table1[i].key1,
+                key2: mock_table1[i].key2,
+                key3: mock_table1[i].key3
+              };
+            }
+
+            fulfill();
+          })
+          .then(function() {
+            var test_result = true,
+                match_length = rows.length === check_data.length,
+                compared = false;
+
+            for(var i = 0, l = rows.length; i < l; i = i + 1) {
+              compared = true;
+              test_result = match_object(rows[i], check_data[i]);
+
+              if(!test_result) {
+                console.log("unmatch:");
+                console.log(JSON.stringify(rows[i]));
+                console.log(JSON.stringify(check_data[i]));
+                break;
+              }
+            }
+
+            done(test_result && match_length && compared);
+          });
+        });
+      });
+    })
+
+    // ########################################################
+
+    .then(function() {
+      return test("test 1-16-1 - select.from.where", function(done) {
+        var check_data = [];
+
+        var query = slii
+        .select(function($, _) {
+          $(_.key1);
+          $(_.key2);
+          $(_.key3);
+        })
+        .from("table1")
+        .where(function($) {
+          $.and("0").eq.value("a");
+        });
+
+        query.run(function(rows) {
+          new Promise(function(fulfill, reject) {
+            for(var i = 0, l = mock_table1.length; i < l; i = i + 1) {
+              if(mock_table1[i].key1 === "a") {
+                check_data[check_data.length] = {
+                  "0": mock_table1[i].key1,
+                  "1": mock_table1[i].key2,
+                  "2": mock_table1[i].key3
+                };
+              }
+            }
+
+            fulfill();
+          })
+          .then(function() {
+            var test_result = true,
+                match_length = rows.length === check_data.length,
+                compared = false;
+
+            for(var i = 0, l = rows.length; i < l; i = i + 1) {
+              compared = true;
+              test_result = match_object(rows[i], check_data[i]);
+
+              if(!test_result) {
+                console.log("unmatch:");
+                console.log(JSON.stringify(rows[i]));
+                console.log(JSON.stringify(check_data[i]));
+                break;
+              }
+            }
+
+            done(test_result && match_length && compared);
+          });
+        });
+      });
+    })
+    .then(function() {
+      return test("test 1-16-2 - select(as).from.where", function(done) {
+        var check_data = [];
+
+        var query = slii
+        .select(function($, _) {
+          $(_.key1).as("key1");
+          $(_.key2).as("key2");
+          $(_.key3).as("key3");
+        })
+        .from("table1")
+        .where(function($) {
+          $.and("key1").eq.value("a");
+        });
+
+        query.run(function(rows) {
+          new Promise(function(fulfill, reject) {
+            for(var i = 0, l = mock_table1.length; i < l; i = i + 1) {
+              if(mock_table1[i].key1 === "a") {
+                check_data[check_data.length] = {
+                  "key1": mock_table1[i].key1,
+                  "key2": mock_table1[i].key2,
+                  "key3": mock_table1[i].key3
+                };
+              }
+            }
+
+            fulfill();
+          })
+          .then(function() {
+            var test_result = true,
+                match_length = rows.length === check_data.length,
+                compared = false;
+
+            for(var i = 0, l = rows.length; i < l; i = i + 1) {
+              compared = true;
+              test_result = match_object(rows[i], check_data[i]);
+
+              if(!test_result) {
+                console.log("unmatch:");
+                console.log(JSON.stringify(rows[i]));
+                console.log(JSON.stringify(check_data[i]));
+                break;
+              }
+            }
+
+            done(test_result && match_length && compared);
+          });
+        });
+      });
+    })
+
+    // ########################################################
+
+    .then(function() {
+      return test("test 1-17-1 - select.from.group_by", function(done) {
+        var check_data = [];
+
+        var query = slii
+        .select(function($, _) {
+          $(_.key1);
+          $(_.key2);
+          $(_.key3);
+        })
+        .from("table1")
+        .group_by("0", "1");
+
+        query.run(function(rows) {
+          new Promise(function(fulfill, reject) {
+            for(var i = 0, l = mock_table1.length; i < l; i = i + 1) {
+              var values = mock_table1[i];
+              var group_key = values.key1 + "_"
+              + values.key2;
+
+              var match = false;
+              for(var j = 0, l2 = check_data.length; j < l2; j = j + 1) {
+                var test_key = Object.keys(check_data[j])[0];
+
+                if(test_key === group_key) {
+                  check_data[j][group_key] = {
+                    "0": values.key1,
+                    "1": values.key2,
+                    "2": values.key3
+                  };
+                  match = true;
+                  break;
+                }
+              }
+              if(!match) {
+                check_data[check_data.length] = {};
+                check_data[check_data.length - 1][group_key] = {
+                  "0": values.key1,
+                  "1": values.key2,
+                  "2": values.key3
+                };
+              }
+            }
+
+            fulfill();
+          })
+          .then(function() {
+            var test_result = true,
+                match_length = rows.length == check_data.length,
+                compared = false;
+
+            for(var i = 0, l = rows.length; i < l; i = i + 1) {
+              compared = true;
+              var group_key = Object.keys(check_data[i])[0];
+
+              test_result = match_object(rows[i], check_data[i][group_key]);
+
+              if(!test_result) {
+                console.log("unmatch:");
+                console.log(JSON.stringify(rows[i]));
+                console.log(JSON.stringify(check_data[i]));
+                break;
+              }
+            }
+
+            done(test_result && match_length && compared);
+          });
+        })
+      });
+    })
+    .then(function() {
+      return test("test 1-17-2 - select(as).from.group_by", function(done) {
+        var check_data = [];
+
+        var query = slii
+        .select(function($, _) {
+          $(_.key1).as("key1");
+          $(_.key2).as("key2");
+          $(_.key3).as("key3");
+        })
+        .from("table1")
+        .group_by("key1", "key2");
+
+        query.run(function(rows) {
+          new Promise(function(fulfill, reject) {
+            for(var i = 0, l = mock_table1.length; i < l; i = i + 1) {
+              var values = mock_table1[i];
+              var group_key = values.key1 + "_"
+                            + values.key2;
+
+              var match = false;
+              for(var j = 0, l2 = check_data.length; j < l2; j = j + 1) {
+                var test_key = Object.keys(check_data[j])[0];
+
+                if(test_key === group_key) {
+                  check_data[j][group_key] = {
+                    key1: values.key1,
+                    key2: values.key2,
+                    key3: values.key3
+                  };
+                  match = true;
+                  break;
+                }
+              }
+              if(!match) {
+                check_data[check_data.length] = {};
+                check_data[check_data.length - 1][group_key] = {
+                  key1: values.key1,
+                  key2: values.key2,
+                  key3: values.key3
+                };
+              }
+            }
+
+            fulfill();
+          })
+          .then(function() {
+            var test_result = true,
+                match_length = rows.length == check_data.length,
+                compared = false;
+
+            for(var i = 0, l = rows.length; i < l; i = i + 1) {
+              compared = true;
+              var group_key = Object.keys(check_data[i])[0];
+
+              test_result = match_object(rows[i], check_data[i][group_key]);
+
+              if(!test_result) {
+                console.log("unmatch:");
+                console.log(JSON.stringify(rows[i]));
+                console.log(JSON.stringify(check_data[i]));
+                break;
+              }
+            }
+
+            done(test_result && match_length && compared);
+          });
+        })
+      });
+    })
+
+    // ########################################################
+
+    .then(function() {
+      return test("test 1-18-1 - select.from.group_by.having", function(done) {
+        var check_data = [];
+
+        var query = slii
+        .select(function($, _) {
+          $(_.key1);
+          $.sum(_.key2);
+        })
+        .from("table1")
+        .group_by("0")
+        .having(function($) {
+          $.and("1").lt.value(400);
+        });
+
+        query.run(function(rows) {
+          new Promise(function(fulfill, reject) {
+            for(var i = 0, l = mock_table1.length; i < l; i = i + 1) {
+              var values = mock_table1[i];
+              var group_key = values.key1;
+
+              var match = false;
+              for(var j = 0, l2 = check_data.length; j < l2; j = j + 1) {
+                var test_key = Object.keys(check_data[j])[0];
+
+                if(test_key === group_key) {
+                  check_data[j][group_key] = {
+                    "0": values.key1,
+                    "1": check_data[j][group_key]["1"] + values.key2,
+                  };
+                  match = true;
+                  break;
+                }
+              }
+              if(!match) {
+                check_data[check_data.length] = {};
+                check_data[check_data.length - 1][group_key] = {
+                  "0": values.key1,
+                  "1": values.key2
+                };
+              }
+            }
+            var tmp = [];
+            for(var i = 0, l = check_data.length; i < l; i = i + 1) {
+              var group_key = Object.keys(check_data[i])[0];
+
+              if(check_data[i][group_key]["1"] < 400) {
+                tmp[tmp.length] = check_data[i];
+              }
+            }
+            check_data = tmp;
+
+            fulfill();
+          })
+          .then(function() {
+            var test_result = true,
+                match_length = rows.length === check_data.length,
+                compared = false;
+
+            for(var i = 0, l = rows.length; i < l; i = i + 1) {
+              compared = true;
+              var group_key = Object.keys(check_data[i])[0];
+
+              test_result = match_object(rows[i], check_data[i][group_key]);
+
+              if(!test_result) {
+                console.log("unmatch:");
+                console.log(JSON.stringify(rows[i]));
+                console.log(JSON.stringify(check_data[i]));
+                break;
+              }
+            }
+
+            done(test_result && match_length && compared);
+          })
+        });
+      });
+    })
+    .then(function() {
+      return test("test 1-18-2 - select(as).from.group_by.having", function(done) {
+        var check_data = [];
+
+        var query = slii
+        .select(function($, _) {
+          $(_.key1).as("key1");
+          $.sum(_.key2).as("key2");
+        })
+        .from("table1")
+        .group_by("key1")
+        .having(function($) {
+          $.and("key2").lt.value(400);
+        });
+
+        query.run(function(rows) {
+          new Promise(function(fulfill, reject) {
+            for(var i = 0, l = mock_table1.length; i < l; i = i + 1) {
+              var values = mock_table1[i];
+              var group_key = values.key1;
+
+              var match = false;
+              for(var j = 0, l2 = check_data.length; j < l2; j = j + 1) {
+                var test_key = Object.keys(check_data[j])[0];
+
+                if(test_key === group_key) {
+                  check_data[j][group_key] = {
+                    key1: values.key1,
+                    key2: check_data[j][group_key].key2 + values.key2,
+                  };
+                  match = true;
+                  break;
+                }
+              }
+              if(!match) {
+                check_data[check_data.length] = {};
+                check_data[check_data.length - 1][group_key] = {
+                  key1: values.key1,
+                  key2: values.key2
+                };
+              }
+            }
+            var tmp = [];
+            for(var i = 0, l = check_data.length; i < l; i = i + 1) {
+              var group_key = Object.keys(check_data[i])[0];
+
+              if(check_data[i][group_key].key2 < 400) {
+                tmp[tmp.length] = check_data[i];
+              }
+            }
+            check_data = tmp;
+
+            fulfill();
+          })
+          .then(function() {
+            var test_result = true,
+                match_length = rows.length === check_data.length,
+                compared = false;
+
+            for(var i = 0, l = rows.length; i < l; i = i + 1) {
+              compared = true;
+              var group_key = Object.keys(check_data[i])[0];
+
+              test_result = match_object(rows[i], check_data[i][group_key]);
+
+              if(!test_result) {
+                console.log("unmatch:");
+                console.log(JSON.stringify(rows[i]));
+                console.log(JSON.stringify(check_data[i]));
+                break;
+              }
+            }
+
+            done(test_result && match_length && compared);
+          })
+        });
+      });
+    })
+
+    // ########################################################
+
+    .then(function() {
+      return test("test 1-19-1 - select.from.order_by", function(done) {
+        var check_data = [];
+
+        var query = slii
+        .select(function($, _) {
+          $(_.key1);
+          $(_.key2);
+          $(_.key3);
+          $(_.key4);
+        })
+        .from("table1")
+        .order_by("1", "3", "2");
+
+        query.run(function(rows) {
+          new Promise(function(fulfill, reject) {
+            for(var i = 0, l = mock_table1.length; i < l; i = i + 1) {
+              check_data[i] = {};
+              check_data[i][0] = mock_table1[i].key1;
+              check_data[i][1] = mock_table1[i].key2;
+              check_data[i][2] = mock_table1[i].key3;
+              check_data[i][3] = mock_table1[i].key4;
+            }
+
+            check_data = check_data.sort(function(a, b) {
+              if(a[1] > b[1]) {
+                return 1;
+              } else if(a[1] < b[1]) {
+                return -1;
+              } else if(a[3] > b[3]) {
+                return 1;
+              } else if(a[3] < b[3]) {
+                return -1;
+              } else if(a[2] > b[2]) {
+                return 1;
+              } else if(a[2] < b[2]) {
+                return -1;
+              } else {
+                return 0;
+              }
+            });
+
+            fulfill();
+          })
+          .then(function() {
+            var test_reuslt = true,
+                match_length = rows.length === check_data.length,
+                compared = false;
+
+            for(var i = 0, l = rows.length; i < l; i = i + 1) {
+              compared = true;
+              test_result = match_object(rows[i], check_data[i]);
+
+              if(!test_result) {
+                console.log("unmatch:");
+                console.log(JSON.stringify(rows[i]));
+                console.log(JSON.stringify(check_data[i]));
+                break;
+              }
+            }
+
+            done(test_result && match_length && compared);
+          })
+        });
+      });
+    })
+    .then(function() {
+      return test("test 1-19-2 - select(as).from.order_by", function(done) {
+        var check_data = [];
+
+        var query = slii
+        .select(function($, _) {
+          $(_.key1).as("key1");
+          $(_.key2).as("key2");
+          $(_.key3).as("key3");
+          $(_.key4).as("key4");
+        })
+        .from("table1")
+        .order_by("key2", "key4", "key3");
+
+        query.run(function(rows) {
+          new Promise(function(fulfill, reject) {
+            check_data = mock_table1.concat();
+
+            check_data = check_data.sort(function(a, b) {
+              if(a.key2 > b.key2) {
+                return 1;
+              } else if(a.key2 < b.key2) {
+                return -1;
+              } else if(a.key4 > b.key4) {
+                return 1;
+              } else if(a.key4 < b.key4) {
+                return -1;
+              } else if(a.key3 > b.key3) {
+                return 1;
+              } else if(a.key3 < b.key3) {
+                return -1;
+              } else {
+                return 0;
+              }
+            });
+
+            fulfill();
+          })
+          .then(function() {
+            var test_reuslt = true,
+                match_length = rows.length === check_data.length,
+                compared = false;
+
+            for(var i = 0, l = rows.length; i < l; i = i + 1) {
+              compared = true;
+              test_result = match_object(rows[i], check_data[i]);
+
+              if(!test_result) {
+                console.log("unmatch:");
+                console.log(JSON.stringify(rows[i]));
+                console.log(JSON.stringify(check_data[i]));
+                break;
+              }
+            }
+
+            done(test_result && match_length && compared);
+          })
+        });
+      });
+    })
+
+    // ########################################################
+
+    .then(function() {
+      return test("test 1-20-1 select.from.where.group_by.having.order_by", function(done) {
+        var check_data = [];
+
+        var query = slii
+        .select(function($, _) {
+          $(_.key1);
+          $.sum(_.key2);
+        })
+        .from("table1")
+        .where(function($) {
+          $.and("0").in.value("a", "b", "d");
+        })
+        .group_by("0")
+        .having(function($) {
+          $.and("1").gt.value(100);
+        })
+        .order_by({ "1": "asc" });
+
+        query.run(function(rows) {
+          new Promise(function(fulfill, reject) {
+            for(var i = 0, l = mock_table1.length; i < l; i = i + 1) {
+              var values = mock_table1[i];
+              var group_key = values.key1;
+
+              var match = false;
+              for(var j = 0, l2 = check_data.length; j < l2; j = j + 1) {
+                var test_key = Object.keys(check_data[j])[0];
+
+                if(test_key === group_key) {
+                  check_data[j][group_key] = {
+                    "0": values.key1,
+                    "1": check_data[j][group_key]["1"] + values.key2,
+                  };
+                  match = true;
+                  break;
+                }
+              }
+              if(!match) {
+                check_data[check_data.length] = {};
+                check_data[check_data.length - 1][group_key] = {
+                  "0": values.key1,
+                  "1": values.key2
+                };
+              }
+            }
+            var tmp = [];
+            for(var i = 0, l = check_data.length; i < l; i = i + 1) {
+              var group_key = Object.keys(check_data[i])[0];
+
+              if(!!~["a", "b", "d"].indexOf(check_data[i][group_key]["0"]) &&
+                 check_data[i][group_key]["1"] > 100
+                ) {
+                tmp[tmp.length] = check_data[i];
+              }
+            }
+            check_data = tmp;
+            check_data = check_data.sort(function(a, b) {
+              if(a[1] < b[1]) {
+                return 1;
+              } else if(a[1] > b[1]) {
+                return -1;
+              } else {
+                return 0;
+              }
+            })
+
+            fulfill();
+          })
+          .then(function() {
+            var test_result = true,
+                match_length = rows.length === check_data.length,
+                compared = false;
+
+            for(var i = 0, l = rows.length; i < l; i = i + 1) {
+              compared = true;
+              var group_key = Object.keys(check_data[i])[0];
+
+              test_result = match_object(rows[i], check_data[i][group_key]);
+
+              if(!test_result) {
+                console.log("unmatch:");
+                console.log(JSON.stringify(rows[i]));
+                console.log(JSON.stringify(check_data[i]));
+                break;
+              }
+            }
+
+            done(test_result && match_length && compared);
+          })
+        });
+      });
+    })
+    .then(function() {
+      return test("test 1-20-2 select(as).from.where.group_by.having.order_by", function(done) {
+        var check_data = [];
+
+        var query = slii
+        .select(function($, _) {
+          $(_.key1).as("key1");
+          $.sum(_.key2).as("key2");
+        })
+        .from("table1")
+        .where(function($) {
+          $.and("key1").in.value("a", "b", "d");
+        })
+        .group_by("key1")
+        .having(function($) {
+          $.and("key2").gt.value(100);
+        })
+        .order_by({ key2: "asc" });
+
+        query.run(function(rows) {
+          new Promise(function(fulfill, reject) {
+            for(var i = 0, l = mock_table1.length; i < l; i = i + 1) {
+              var values = mock_table1[i];
+              var group_key = values.key1;
+
+              var match = false;
+              for(var j = 0, l2 = check_data.length; j < l2; j = j + 1) {
+                var test_key = Object.keys(check_data[j])[0];
+
+                if(test_key === group_key) {
+                  check_data[j][group_key] = {
+                    key1: values.key1,
+                    key2: check_data[j][group_key].key2 + values.key2,
+                  };
+                  match = true;
+                  break;
+                }
+              }
+              if(!match) {
+                check_data[check_data.length] = {};
+                check_data[check_data.length - 1][group_key] = {
+                  key1: values.key1,
+                  key2: values.key2
+                };
+              }
+            }
+            var tmp = [];
+            for(var i = 0, l = check_data.length; i < l; i = i + 1) {
+              var group_key = Object.keys(check_data[i])[0];
+
+              if(!!~["a", "b", "d"].indexOf(check_data[i][group_key].key1) &&
+                 check_data[i][group_key].key2 > 100
+              ) {
+                tmp[tmp.length] = check_data[i];
+              }
+            }
+            check_data = tmp;
+            check_data = check_data.sort(function(a, b) {
+              if(a.key2 < b.key2) {
+                return 1;
+              } else if(a.key2 > b.key2) {
+                return -1;
+              } else {
+                return 0;
+              }
+            })
+
+            fulfill();
+          })
+          .then(function() {
+            var test_result = true,
+                match_length = rows.length === check_data.length,
+                compared = false;
+
+            for(var i = 0, l = rows.length; i < l; i = i + 1) {
+              compared = true;
+              var group_key = Object.keys(check_data[i])[0];
+
+              test_result = match_object(rows[i], check_data[i][group_key]);
+
+              if(!test_result) {
+                console.log("unmatch:");
+                console.log(JSON.stringify(rows[i]));
+                console.log(JSON.stringify(check_data[i]));
+                break;
+              }
+            }
+
+            done(test_result && match_length && compared);
+          })
+        });
+      });
+    })
+
+    // ########################################################
+
+    .then(function() {
+      return test("test 1-21-1 - select.from.join", function(done) {
+        var check_data = [];
+
+        var query = slii
+        .select(function($, _) {
+          $(_.table1.key1);
+          $(_.table1.key2);
+          $(_.table1.key3);
+          $(_.table1.key4);
+          $(_.table2.keyA);
+          $(_.table2.keyB);
+        })
+        .from("table1")
+        .join("table2", function($) {
+          $.and("table1.key1").eq.key("table2.keyA");
+        });
+
+        query.run(function(rows) {
+          new Promise(function(fulfill, reject) {
+            for(var i = 0, l = mock_table1.length; i < l; i = i + 1) {
+              for(var j = 0, l2 = mock_table2.length; j < l2; j = j + 1) {
+                if(mock_table1[i].key1 === mock_table2[j].keyA) {
+                  check_data[check_data.length] = {
+                    "0": mock_table1[i].key1,
+                    "1": mock_table1[i].key2,
+                    "2": mock_table1[i].key3,
+                    "3": mock_table1[i].key4,
+                    "4": mock_table2[j].keyA,
+                    "5": mock_table2[j].keyB
+                  };
+                }
+              }
+            }
+
+            fulfill();
+          })
+          .then(function() {
+            var test_result = true,
+                match_length = rows.length === check_data.length,
+                compared = false;
+
+            for(var i = 0, l = rows.length; i < l; i = i + 1) {
+              compared = true;
+              test_result = match_object(rows[i], check_data[i]);
+
+              if(!test_result) {
+                break;
+              }
+            }
+
+            done(test_result && match_length && compared);
+          });
+        });
+      });
+    })
+    .then(function() {
+      return test("test 1-21-2 - select(as).from.join", function(done) {
+        var check_data = [];
+
+        var query = slii
+        .select(function($, _) {
+          $(_.table1.key1).as("key1");
+          $(_.table1.key2).as("key2");
+          $(_.table1.key3).as("key3");
+          $(_.table1.key4).as("key4");
+          $(_.table2.keyA).as("keyA");
+          $(_.table2.keyB).as("keyB");
+        })
+        .from("table1")
+        .join("table2", function($) {
+          $.and("table1.key1").eq.key("table2.keyA");
+        });
+
+        query.run(function(rows) {
+          new Promise(function(fulfill, reject) {
+            for(var i = 0, l = mock_table1.length; i < l; i = i + 1) {
+              for(var j = 0, l2 = mock_table2.length; j < l2; j = j + 1) {
+                if(mock_table1[i].key1 === mock_table2[j].keyA) {
+                  check_data[check_data.length] = {
+                    key1: mock_table1[i].key1,
+                    key2: mock_table1[i].key2,
+                    key3: mock_table1[i].key3,
+                    key4: mock_table1[i].key4,
+                    keyA: mock_table2[j].keyA,
+                    keyB: mock_table2[j].keyB
+                  };
+                }
+              }
+            }
+
+            fulfill();
+          })
+          .then(function() {
+            var test_result = true,
+                match_length = rows.length === check_data.length,
+                compared = false;
+
+            for(var i = 0, l = rows.length; i < l; i = i + 1) {
+              compared = true;
+              test_result = match_object(rows[i], check_data[i]);
+
+              if(!test_result) {
+                console.log("unmatch:");
+                console.log(JSON.stringify(rows[i]));
+                console.log(JSON.stringify(check_data[i]));
+                break;
+              }
+            }
+
+            done(test_result && match_length && compared);
+          });
+        });
+      });
+    })
+    .then(function() {
+      return test("test 1-22-1 select.from.join(select)", function(done) {
+        var check_data = [];
+
+        var query = slii.select(function($, _) {
+          $(_.table1.key1);
+          $(_.table1.key2);
+          $(_.table1.key3);
+          $(_.table1.key4);
+          $(_["0"]);
+          $(_["1"]);
+        })
+        .from("table1")
+        .join(
+          slii.select(function($, _) {
+            $(_.keyA);
+            $(_.keyB);
+          })
+          .from("table2"),
+          function($) {
+            $.and("table1.key1").eq.key("0");
+          }
+        );
+
+        query.run(function(rows) {
+          new Promise(function(fulfill, reject) {
+            for(var i = 0, l = mock_table1.length; i < l; i = i + 1) {
+              for(var j = 0, l2 = mock_table2.length; j < l2; j = j + 1) {
+                if(mock_table1[i].key1 === mock_table2[j].keyA) {
+                  check_data[check_data.length] = {
+                    "0": mock_table1[i].key1,
+                    "1": mock_table1[i].key2,
+                    "2": mock_table1[i].key3,
+                    "3": mock_table1[i].key4,
+                    "4": mock_table2[j].keyA,
+                    "5": mock_table2[j].keyB
+                  };
+                }
+              }
+            }
+
+            fulfill();
+          })
+          .then(function() {
+            var test_result = true,
+                compared = false;
+
+            for(var i = 0, l = rows.length; i < l; i = i + 1) {
+              compared = true;
+              test_result = match_object(rows[i], check_data[i]);
+
+              if(!test_result) {
+                console.log("unmatch:");
+                console.log(JSON.stringify(rows[i]));
+                console.log(JSON.stringify(check_data[i]));
+                break;
+              }
+            }
+
+            done(test_result && compared);
+          });
+        });
+      });
+    })
+    .then(function() {
+      return test("test 1-22-2 select.from.join(select)(as)", function(done) {
+        var check_data = [];
+
+        var query = slii.select(function($, _) {
+          $(_.table1.key1);
+          $(_.table1.key2);
+          $(_.table1.key3);
+          $(_.table1.key4);
+          $(_.t2["0"]);
+          $(_.t2["1"]);
+        })
+        .from("table1")
+        .join(
+          slii.select(function($, _) {
+            $(_.keyA);
+            $(_.keyB);
+          })
+          .from("table2"),
+          function($) {
+            $.and("table1.key1").eq.key("t2.0");
+          }
+        ).as("t2");
+
+        query.run(function(rows) {
+          new Promise(function(fulfill, reject) {
+            for(var i = 0, l = mock_table1.length; i < l; i = i + 1) {
+              for(var j = 0, l2 = mock_table2.length; j < l2; j = j + 1) {
+                if(mock_table1[i].key1 === mock_table2[j].keyA) {
+                  check_data[check_data.length] = {
+                    "0": mock_table1[i].key1,
+                    "1": mock_table1[i].key2,
+                    "2": mock_table1[i].key3,
+                    "3": mock_table1[i].key4,
+                    "4": mock_table2[j].keyA,
+                    "5": mock_table2[j].keyB
+                  };
+                }
+              }
+            }
+
+            fulfill();
+          })
+          .then(function() {
+            var test_result = true,
+                compared = false;
+
+            for(var i = 0, l = rows.length; i < l; i = i + 1) {
+              compared = true;
+              test_result = match_object(rows[i], check_data[i]);
+
+              if(!test_result) {
+                console.log("unmatch:");
+                console.log(JSON.stringify(rows[i]));
+                console.log(JSON.stringify(check_data[i]));
+                break;
+              }
+            }
+
+            done(test_result && compared);
+          });
+        });
+      });
+    })
+    .then(function() {
+      return test("test 1-22-3 select.from.join(select(as))", function(done) {
+        var check_data = [];
+
+        var query = slii.select(function($, _) {
+          $(_.table1.key1);
+          $(_.table1.key2);
+          $(_.table1.key3);
+          $(_.table1.key4);
+          $(_.keyA);
+          $(_.keyB);
+        })
+        .from("table1")
+        .join(
+          slii.select(function($, _) {
+            $(_.keyA).as("keyA");
+            $(_.keyB).as("keyB");
+          })
+          .from("table2"),
+          function($) {
+            $.and("table1.key1").eq.key("keyA");
+          }
+        );
+
+        query.run(function(rows) {
+          new Promise(function(fulfill, reject) {
+            for(var i = 0, l = mock_table1.length; i < l; i = i + 1) {
+              for(var j = 0, l2 = mock_table2.length; j < l2; j = j + 1) {
+                if(mock_table1[i].key1 === mock_table2[j].keyA) {
+                  check_data[check_data.length] = {
+                    "0": mock_table1[i].key1,
+                    "1": mock_table1[i].key2,
+                    "2": mock_table1[i].key3,
+                    "3": mock_table1[i].key4,
+                    "4": mock_table2[j].keyA,
+                    "5": mock_table2[j].keyB
+                  };
+                }
+              }
+            }
+
+            fulfill();
+          })
+          .then(function() {
+            var test_result = true,
+                compared = false;
+
+            for(var i = 0, l = rows.length; i < l; i = i + 1) {
+              compared = true;
+              test_result = match_object(rows[i], check_data[i]);
+
+              if(!test_result) {
+                console.log("unmatch:");
+                console.log(JSON.stringify(rows[i]));
+                console.log(JSON.stringify(check_data[i]));
+                break;
+              }
+            }
+
+            done(test_result && compared);
+          });
+        });
+      });
+    })
+    .then(function() {
+      return test("test 1-22-4 select.from.join(select(as))(as)", function(done) {
+        var check_data = [];
+
+        var query = slii.select(function($, _) {
+          $(_.table1.key1);
+          $(_.table1.key2);
+          $(_.table1.key3);
+          $(_.table1.key4);
+          $(_.t2.keyA);
+          $(_.t2.keyB);
+        })
+        .from("table1")
+        .join(
+          slii.select(function($, _) {
+            $(_.keyA).as("keyA");
+            $(_.keyB).as("keyB");
+          })
+          .from("table2"),
+          function($) {
+            $.and("table1.key1").eq.key("t2.keyA");
+          }
+        ).as("t2");
+
+        query.run(function(rows) {
+          new Promise(function(fulfill, reject) {
+            for(var i = 0, l = mock_table1.length; i < l; i = i + 1) {
+              for(var j = 0, l2 = mock_table2.length; j < l2; j = j + 1) {
+                if(mock_table1[i].key1 === mock_table2[j].keyA) {
+                  check_data[check_data.length] = {
+                    "0": mock_table1[i].key1,
+                    "1": mock_table1[i].key2,
+                    "2": mock_table1[i].key3,
+                    "3": mock_table1[i].key4,
+                    "4": mock_table2[j].keyA,
+                    "5": mock_table2[j].keyB
+                  };
+                }
+              }
+            }
+
+            fulfill();
+          })
+          .then(function() {
+            var test_result = true,
+                compared = false;
+
+            for(var i = 0, l = rows.length; i < l; i = i + 1) {
+              compared = true;
+              test_result = match_object(rows[i], check_data[i]);
+
+              if(!test_result) {
+                console.log("unmatch:");
+                console.log(JSON.stringify(rows[i]));
+                console.log(JSON.stringify(check_data[i]));
+                break;
+              }
+            }
+
+            done(test_result && compared);
+          });
+        });
+      });
+    })
+    .then(function() {
+      return test("test 1-24-1 select.from.where.join.join", function(done) {
+        var check_data1 = [],
+            check_data2 = [],
+            check_data3 = [];
+
+        (function() {
+          var query = slii
+          .select(function($, _) {
+            $(_.table1.key1);
+            $(_.table1.key2);
+            $(_.table1.key3);
+            $(_.table2.keyA);
+            $(_.table2.keyB);
+            $(_.table3.keyX);
+            $(_.table3.keyY);
+            $(_.table3.keyZ);
+          })
+          .from("table1")
+          .join("table2")
+          .join("table3")
+          .where(function($) {
+            $.and("table1.key1").eq.value("b");
+            $.and("table1.key1").eq.key("table2.keyA");
+            $.and("table1.key1").eq.key("table3.keyX");
+          });
+
+          return query.run(function(rows, ok, ng) {
+            check_data1 = rows;
+
+            ok();
+          });
+        }())
+        .then(function() {
+          var query = slii
+          .select(function($, _) {
+            $(_.table1.key1);
+            $(_.table1.key2);
+            $(_.table1.key3);
+            $(_.table2.keyA);
+            $(_.table2.keyB);
+            $(_.table3.keyX);
+            $(_.table3.keyY);
+            $(_.table3.keyZ);
+          })
+          .from("table1")
+          .join("table2", function($) {
+            $.and("table1.key1").eq.key("table2.keyA");
+          })
+          .join("table3")
+          .where(function($) {
+            $.and("table1.key1").eq.value("b");
+            $.and("table1.key1").eq.key("table3.keyX");
+          });
+
+          return query.run(function(rows, ok, ng) {
+            check_data2 = rows;
+
+            ok();
+          });
+        })
+        .then(function() {
+          var query = slii
+          .select(function($, _) {
+            $(_.table1.key1);
+            $(_.table1.key2);
+            $(_.table1.key3);
+            $(_.table2.keyA);
+            $(_.table2.keyB);
+            $(_.table3.keyX);
+            $(_.table3.keyY);
+            $(_.table3.keyZ);
+          })
+          .from("table1")
+          .join("table2", function($) {
+            $.and("table1.key1").eq.key("table2.keyA");
+          })
+          .join("table3", function($) {
+            $.and("table1.key1").eq.key("table3.keyX");
+          })
+          .where(function($) {
+            $.and("table1.key1").eq.value("b");
+          });
+
+          return query.run(function(rows, ok, ng) {
+            check_data3 = rows;
+
+            ok();
+          });
+        })
+        .then(function() {
+          var test_result = true,
+              match_length =  check_data1.length === check_data2.length
+                           && check_data1.length === check_data3.length,
+              compared = false;
+
+          for(var i = 0, l = check_data1.length; i < l; i = i + 1) {
+            compared = true;
+
+            test_result =  match_object(check_data1[i], check_data2[i])
+                        && match_object(check_data1[i], check_data3[i]);
+
+            if(!test_result) {
+              console.log("unmatch");
+              console.log(JSON.stringify(check_data1[i]));
+              console.log(JSON.stringify(check_data2[i]));
+              console.log(JSON.stringify(check_data3[i]));
+              break;
+            }
+          }
+
+          done(test_result && match_length && compared);
+        })
+      });
+    })
+
+    .then(function() {
+      return test("test 1-25-1 select.from(as).join.join", function(done) {
+        var check_data1 = [],
+            check_data2 = [],
+            check_data3 = [];
+
+        (function() {
+          var query = slii
+          .select(function($, _) {
+            $(_.t1.key1);
+            $(_.t1.key2);
+            $(_.t1.key3);
+            $(_.table2.keyA);
+            $(_.table2.keyB);
+            $(_.table3.keyX);
+            $(_.table3.keyY);
+            $(_.table3.keyZ);
+          })
+          .from("table1").as("t1")
+          .join("table2")
+          .join("table3")
+          .where(function($) {
+            $.and("t1.key1").eq.value("b");
+            $.and("t1.key1").eq.key("table2.keyA");
+            $.and("t1.key1").eq.key("table3.keyX");
+          });
+
+          return query.run(function(rows, ok, ng) {
+            check_data1 = rows;
+
+            ok();
+          });
+        }())
+        .then(function() {
+          var query = slii
+          .select(function($, _) {
+            $(_.t1.key1);
+            $(_.t1.key2);
+            $(_.t1.key3);
+            $(_.table2.keyA);
+            $(_.table2.keyB);
+            $(_.table3.keyX);
+            $(_.table3.keyY);
+            $(_.table3.keyZ);
+          })
+          .from("table1").as("t1")
+          .join("table2", function($) {
+            $.and("t1.key1").eq.key("table2.keyA");
+          })
+          .join("table3")
+          .where(function($) {
+            $.and("t1.key1").eq.value("b");
+            $.and("t1.key1").eq.key("table3.keyX");
+          });
+
+          return query.run(function(rows, ok, ng) {
+            check_data2 = rows;
+
+            ok();
+          });
+        })
+        .then(function() {
+          var query = slii
+          .select(function($, _) {
+            $(_.t1.key1);
+            $(_.t1.key2);
+            $(_.t1.key3);
+            $(_.table2.keyA);
+            $(_.table2.keyB);
+            $(_.table3.keyX);
+            $(_.table3.keyY);
+            $(_.table3.keyZ);
+          })
+          .from("table1").as("t1")
+          .join("table2", function($) {
+            $.and("t1.key1").eq.key("table2.keyA");
+          })
+          .join("table3", function($) {
+            $.and("t1.key1").eq.key("table3.keyX");
+          })
+          .where(function($) {
+            $.and("t1.key1").eq.value("b");
+          });
+
+          return query.run(function(rows, ok, ng) {
+            check_data3 = rows;
+
+            ok();
+          });
+        })
+        .then(function() {
+          var test_result = true,
+              match_length =  check_data1.length === check_data2.length
+                           && check_data1.length === check_data3.length,
+              compared = false;
+
+          for(var i = 0, l = check_data1.length; i < l; i = i + 1) {
+            compared = true;
+
+            test_result =  match_object(check_data1[i], check_data2[i])
+                        && match_object(check_data1[i], check_data3[i]);
+
+            if(!test_result) {
+              console.log("unmatch");
+              console.log(JSON.stringify(check_data1[i]));
+              console.log(JSON.stringify(check_data2[i]));
+              console.log(JSON.stringify(check_data3[i]));
+              break;
+            }
+          }
+
+          done(test_result && match_length && compared);
+        })
+      });
+    })
+    .then(function() {
+      return test("test 1-26-1 select.from(as).join(as).join(as)", function(done) {
+        var check_data1 = [],
+            check_data2 = [],
+            check_data3 = [];
+
+        (function() {
+          var query = slii
+          .select(function($, _) {
+            $(_.t1.key1);
+            $(_.t1.key2);
+            $(_.t1.key3);
+            $(_.t2.keyA);
+            $(_.t2.keyB);
+            $(_.t3.keyX);
+            $(_.t3.keyY);
+            $(_.t3.keyZ);
+          })
+          .from("table1").as("t1")
+          .join("table2").as("t2")
+          .join("table3").as("t3")
+          .where(function($) {
+            $.and("t1.key1").eq.value("b");
+            $.and("t1.key1").eq.key("t2.keyA");
+            $.and("t1.key1").eq.key("t3.keyX");
+          });
+
+          return query.run(function(rows, ok, ng) {
+            check_data1 = rows;
+
+            ok();
+          });
+        }())
+        .then(function() {
+          var query = slii
+          .select(function($, _) {
+            $(_.t1.key1);
+            $(_.t1.key2);
+            $(_.t1.key3);
+            $(_.t2.keyA);
+            $(_.t2.keyB);
+            $(_.t3.keyX);
+            $(_.t3.keyY);
+            $(_.t3.keyZ);
+          })
+          .from("table1").as("t1")
+          .join("table2", function($) {
+            $.and("t1.key1").eq.key("t2.keyA");
+          }).as("t2")
+          .join("table3").as("t3")
+          .where(function($) {
+            $.and("t1.key1").eq.value("b");
+            $.and("t1.key1").eq.key("t3.keyX");
+          });
+
+          return query.run(function(rows, ok, ng) {
+            check_data2 = rows;
+
+            ok();
+          });
+        })
+        .then(function() {
+          var query = slii
+          .select(function($, _) {
+            $(_.t1.key1);
+            $(_.t1.key2);
+            $(_.t1.key3);
+            $(_.t2.keyA);
+            $(_.t2.keyB);
+            $(_.t3.keyX);
+            $(_.t3.keyY);
+            $(_.t3.keyZ);
+          })
+          .from("table1").as("t1")
+          .join("table2", function($) {
+            $.and("t1.key1").eq.key("t2.keyA");
+          }).as("t2")
+          .join("table3", function($) {
+            $.and("t1.key1").eq.key("t3.keyX");
+          }).as("t3")
+          .where(function($) {
+            $.and("t1.key1").eq.value("b");
+          });
+
+          return query.run(function(rows, ok, ng) {
+            check_data3 = rows;
+
+            ok();
+          });
+        })
+        .then(function() {
+          var test_result = true,
+              match_length =  check_data1.length === check_data2.length
+                           && check_data1.length === check_data3.length,
+              compared = false;
+
+          for(var i = 0, l = check_data1.length; i < l; i = i + 1) {
+            compared = true;
+
+            test_result =  match_object(check_data1[i], check_data2[i])
+                        && match_object(check_data1[i], check_data3[i]);
+
+            if(!test_result) {
+              console.log("unmatch");
+              console.log(JSON.stringify(check_data1[i]));
+              console.log(JSON.stringify(check_data2[i]));
+              console.log(JSON.stringify(check_data3[i]));
+              break;
+            }
+          }
+
+          done(test_result && match_length && compared);
+        })
+      });
+    })
+    .then(function() {
+      return test("test 1-27-1 select.from(select).join.join", function(done) {
+        var check_data1 = [],
+            check_data2 = [],
+            check_data3 = [];
+
+        (function() {
+          var query = slii
+          .select(function($, _) {
+            $(_["0"]);
+            $(_["1"]);
+            $(_["2"]);
+            $(_.table2.keyA);
+            $(_.table2.keyB);
+            $(_.table3.keyX);
+            $(_.table3.keyY);
+            $(_.table3.keyZ);
+          })
+          .from(slii.select(function($, _) {
+            $(_.key1);
+            $(_.key2);
+            $(_.key3);
+          }).from("table1"))
+          .join("table2")
+          .join("table3")
+          .where(function($) {
+            $.and("0").eq.value("b");
+            $.and("0").eq.key("3");
+            $.and("0").eq.key("5");
+          });
+
+          return query.run(function(rows, ok, ng) {
+            check_data1 = rows;
+
+            ok();
+          });
+        }())
+        .then(function() {
+          var query = slii
+          .select(function($, _) {
+            $(_["0"]);
+            $(_["1"]);
+            $(_["2"]);
+            $(_.table2.keyA);
+            $(_.table2.keyB);
+            $(_.table3.keyX);
+            $(_.table3.keyY);
+            $(_.table3.keyZ);
+          })
+          .from(slii.select(function($, _) {
+            $(_.key1);
+            $(_.key2);
+            $(_.key3);
+          }).from("table1"))
+          .join("table2", function($) {
+            $.and("0").eq.key("table2.keyA");
+          })
+          .join("table3")
+          .where(function($) {
+            $.and("0").eq.value("b");
+            $.and("0").eq.key("5");
+          });
+
+          return query.run(function(rows, ok, ng) {
+            check_data2 = rows;
+
+            ok();
+          });
+        })
+        .then(function() {
+          var query = slii
+          .select(function($, _) {
+            $(_["0"]);
+            $(_["1"]);
+            $(_["2"]);
+            $(_.table2.keyA);
+            $(_.table2.keyB);
+            $(_.table3.keyX);
+            $(_.table3.keyY);
+            $(_.table3.keyZ);
+          })
+          .from(slii.select(function($, _) {
+            $(_.key1);
+            $(_.key2);
+            $(_.key3);
+          }).from("table1"))
+          .join("table2", function($) {
+            $.and("0").eq.key("table2.keyA");
+          })
+          .join("table3", function($) {
+            $.and("0").eq.key("table3.keyX");
+          })
+          .where(function($) {
+            $.and("0").eq.value("b");
+          });
+
+          return query.run(function(rows, ok, ng) {
+            check_data3 = rows;
+
+            ok();
+          });
+        })
+        .then(function() {
+          var test_result = true,
+              match_length =  check_data1.length === check_data2.length
+                           && check_data1.length === check_data3.length,
+              compared = false;
+
+          for(var i = 0, l = check_data1.length; i < l; i = i + 1) {
+            compared = true;
+
+            test_result =  match_object(check_data1[i], check_data2[i])
+                        && match_object(check_data1[i], check_data3[i]);
+
+            if(!test_result) {
+              console.log("unmatch");
+              console.log(JSON.stringify(check_data1[i]));
+              console.log(JSON.stringify(check_data2[i]));
+              console.log(JSON.stringify(check_data3[i]));
+              break;
+            }
+          }
+
+          done(test_result && match_length && compared);
+        })
+      });
+    })
+    .then(function() {
+      return test("test 1-28-1 select.from(select(as)).join(select(as)).join(select(as))", function(done) {
+        var check_data1 = [],
+            check_data2 = [],
+            check_data3 = [];
+
+        (function() {
+          var query = slii
+          .select(function($, _) {
+            $(_.key1);
+            $(_.key2);
+            $(_.key3);
+            $(_.keyA);
+            $(_.keyB);
+            $(_.keyX);
+            $(_.keyY);
+            $(_.keyZ);
+          })
+          .from(slii.select(function($, _) {
+            $(_.key1).as("key1");
+            $(_.key2).as("key2");
+            $(_.key3).as("key3");
+          }).from("table1"))
+          .join(slii.select(function($, _) {
+            $(_.keyA).as("keyA");
+            $(_.keyB).as("keyB");
+          }).from("table2"))
+          .join(slii.select(function($, _) {
+            $(_.keyX).as("keyX");
+            $(_.keyY).as("keyY");
+            $(_.keyZ).as("keyZ");
+          }).from("table3"))
+          .where(function($) {
+            $.and("0").eq.value("b");
+            $.and("0").eq.key("3");
+            $.and("0").eq.key("5");
+          });
+
+          return query.run(function(rows, ok, ng) {
+            check_data1 = rows;
+
+            ok();
+          });
+        }())
+        .then(function() {
+          var query = slii
+          .select(function($, _) {
+            $(_.key1);
+            $(_.key2);
+            $(_.key3);
+            $(_.keyA);
+            $(_.keyB);
+            $(_.keyX);
+            $(_.keyY);
+            $(_.keyZ);
+          })
+          .from(slii.select(function($, _) {
+            $(_.key1).as("key1");
+            $(_.key2).as("key2");
+            $(_.key3).as("key3");
+          }).from("table1"))
+          .join(slii.select(function($, _) {
+            $(_.keyA).as("keyA");
+            $(_.keyB).as("keyB");
+          }).from("table2"), function($) {
+            $.and("key1").eq.key("keyA");
+          })
+          .join(slii.select(function($, _) {
+            $(_.keyX).as("keyX");
+            $(_.keyY).as("keyY");
+            $(_.keyZ).as("keyZ");
+          }).from("table3"))
+          .where(function($) {
+            $.and("0").eq.value("b");
+            $.and("0").eq.key("5");
+          });
+
+          return query.run(function(rows, ok, ng) {
+            check_data2 = rows;
+
+            ok();
+          });
+        })
+        .then(function() {
+          var query = slii
+          .select(function($, _) {
+            $(_.key1);
+            $(_.key2);
+            $(_.key3);
+            $(_.keyA);
+            $(_.keyB);
+            $(_.keyX);
+            $(_.keyY);
+            $(_.keyZ);
+          })
+          .from(slii.select(function($, _) {
+            $(_.key1).as("key1");
+            $(_.key2).as("key2");
+            $(_.key3).as("key3");
+          }).from("table1"))
+          .join(slii.select(function($, _) {
+            $(_.keyA).as("keyA");
+            $(_.keyB).as("keyB");
+          }).from("table2"), function($) {
+            $.and("key1").eq.key("keyA");
+          })
+          .join(slii.select(function($, _) {
+            $(_.keyX).as("keyX");
+            $(_.keyY).as("keyY");
+            $(_.keyZ).as("keyZ");
+          }).from("table3"), function($) {
+            $.and("key1").eq.key("keyX");
+          })
+          .where(function($) {
+            $.and("0").eq.value("b");
+          });
+
+          return query.run(function(rows, ok, ng) {
+            check_data3 = rows;
+
+            ok();
+          });
+        })
+        .then(function() {
+          var test_result = true,
+              match_length =  check_data1.length === check_data2.length
+                           && check_data1.length === check_data3.length,
+              compared = false;
+
+          for(var i = 0, l = check_data1.length; i < l; i = i + 1) {
+            compared = true;
+
+            test_result =  match_object(check_data1[i], check_data2[i])
+              && match_object(check_data1[i], check_data3[i]);
+
+            if(!test_result) {
+              console.log("unmatch");
+              console.log(JSON.stringify(check_data1[i]));
+              console.log(JSON.stringify(check_data2[i]));
+              console.log(JSON.stringify(check_data3[i]));
+              break;
+            }
+          }
+
+          done(test_result && match_length && compared);
+        });
+      });
+    })
+    .then(function() {
+      return test("test 1-29-1 select.from(select)(as).join(select)(as).join(select)(as)", function(done) {
+        var check_data1 = [],
+            check_data2 = [],
+            check_data3 = [];
+
+        (function() {
+          var query = slii
+          .select(function($, _) {
+            $(_.t1["0"]);
+            $(_.t1["1"]);
+            $(_.t1["2"]);
+            $(_.t2["0"]);
+            $(_.t2["1"]);
+            $(_.t3["0"]);
+            $(_.t3["1"]);
+            $(_.t3["2"]);
+          })
+          .from(slii.select(function($, _) {
+            $(_.key1);
+            $(_.key2);
+            $(_.key3);
+          }).from("table1")).as("t1")
+          .join(slii.select(function($, _) {
+            $(_.keyA);
+            $(_.keyB);
+          }).from("table2")).as("t2")
+          .join(slii.select(function($, _) {
+            $(_.keyX);
+            $(_.keyY);
+            $(_.keyZ);
+          }).from("table3")).as("t3")
+          .where(function($) {
+            $.and("0").eq.value("b");
+            $.and("0").eq.key("3");
+            $.and("0").eq.key("5");
+          });
+
+          return query.run(function(rows, ok, ng) {
+            check_data1 = rows;
+
+            ok();
+          });
+        }())
+        .then(function() {
+          var query = slii
+          .select(function($, _) {
+            $(_.t1["0"]);
+            $(_.t1["1"]);
+            $(_.t1["2"]);
+            $(_.t2["0"]);
+            $(_.t2["1"]);
+            $(_.t3["0"]);
+            $(_.t3["1"]);
+            $(_.t3["2"]);
+          })
+          .from(slii.select(function($, _) {
+            $(_.key1);
+            $(_.key2);
+            $(_.key3);
+          }).from("table1")).as("t1")
+          .join(slii.select(function($, _) {
+            $(_.keyA);
+            $(_.keyB);
+          }).from("table2"), function($) {
+            $.and("t1.0").eq.key("t2.0");
+          }).as("t2")
+          .join(slii.select(function($, _) {
+            $(_.keyX);
+            $(_.keyY);
+            $(_.keyZ);
+          }).from("table3")).as("t3")
+          .where(function($) {
+            $.and("0").eq.value("b");
+            $.and("0").eq.key("5");
+          });
+
+          return query.run(function(rows, ok, ng) {
+            check_data2 = rows;
+
+            ok();
+          });
+        })
+        .then(function() {
+          var query = slii
+          .select(function($, _) {
+            $(_.t1["0"]);
+            $(_.t1["1"]);
+            $(_.t1["2"]);
+            $(_.t2["0"]);
+            $(_.t2["1"]);
+            $(_.t3["0"]);
+            $(_.t3["1"]);
+            $(_.t3["2"]);
+          })
+          .from(slii.select(function($, _) {
+            $(_.key1);
+            $(_.key2);
+            $(_.key3);
+          }).from("table1")).as("t1")
+          .join(slii.select(function($, _) {
+            $(_.keyA);
+            $(_.keyB);
+          }).from("table2"), function($) {
+            $.and("t1.0").eq.key("t2.0");
+          }).as("t2")
+          .join(slii.select(function($, _) {
+            $(_.keyX);
+            $(_.keyY);
+            $(_.keyZ);
+          }).from("table3"), function($) {
+            $.and("t1.0").eq.key("t3.0");
+          }).as("t3")
+          .where(function($) {
+            $.and("0").eq.value("b");
+          });
+
+          return query.run(function(rows, ok, ng) {
+            check_data3 = rows;
+
+            ok();
+          });
+        })
+        .then(function() {
+          var test_result = true,
+              match_length =  check_data1.length === check_data2.length
+                           && check_data1.length === check_data3.length,
+              compared = false;
+
+          for(var i = 0, l = check_data1.length; i < l; i = i + 1) {
+            compared = true;
+
+            test_result =  match_object(check_data1[i], check_data2[i])
+                        && match_object(check_data1[i], check_data3[i]);
+
+            if(!test_result) {
+              console.log("unmatch");
+              console.log(JSON.stringify(check_data1[i]));
+              console.log(JSON.stringify(check_data2[i]));
+              console.log(JSON.stringify(check_data3[i]));
+              break;
+            }
+          }
+
+          done(test_result && match_length && compared);
+        })
+      });
+    })
+
+//
+////    .then(function() {
+////      section("test 208 - select from join where group_by having order_by");
+////    })
+//
+//    // ########################################################
+
+    .then(function() {
+      return test("test 999 - close", function(done) {
+        slii.close()
+        .then(function() {
+          done(slii._closed === true);
+        })
+      });
+    })
+    .then(function() {
+      write("NG COUNT: " + getValue("ng_count"));
+    })
+    .catch(function(err) {
+      console.error(err);
+    });
+  </script>
+</body>
+</html>

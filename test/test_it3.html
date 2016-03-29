@@ -1,0 +1,142 @@
+<html>
+<head>
+  <style>
+    #operation {
+      width: 90%;
+      height: 5%;
+    }
+    #view {
+      width: 90%;
+      height: 90%;
+      border: solid 1px #000000;
+    }
+  </style>
+</head>
+<body>
+  <div id="operation">
+    <input id="word" type="text" value="">
+    <button id="select">SELECT</button>
+    <button id="add">ADD</button>
+    <button id="delete">DELETE</button>
+    <button id="reset">RESET</button>
+    <button id="check">CHECK</button>
+  </div>
+  <ul id="view"></ul>
+
+  <script src="../dist/js/browser/SLII.js"></script>
+  <script>
+    var slii = new SLII("test_app");
+
+    var word = document.getElementById("word"),
+        select = document.getElementById("select"),
+        add = document.getElementById("add"),
+        del = document.getElementById("delete"),
+        reset = document.getElementById("reset"),
+        check = document.getElementById("check"),
+        view = document.getElementById("view");
+
+    reset.addEventListener("click", function(e) {
+      console.log("database reset.");
+
+//      slii.deleteDatabase()
+//      .then(function() {
+//        return slii.close();
+//      })
+//      .then(function() {
+//        init();
+//      });
+      slii.deleteDatabase();
+      slii.close()
+      .then(init);
+
+    });
+
+    var def = SLII.createDatabaseDefinition();
+    def.setVersion(1, function(slii) {
+      console.log("set version 1.");
+
+      slii.createTable("table1").run();
+    });
+
+    function init() {
+      slii.open(def)
+      .then(function() {
+        console.log("slii open.");
+
+        select.addEventListener("click", function(e) {
+          var query = null;
+
+          if(word.value !== "") {
+            query = slii
+            .select()
+            .from("table1")
+            .where(function($) {
+              $.and("word").match(new RegExp(".*" + word.value + ".*"));
+              //$.and("word").eq.value(word.value);
+            });
+
+
+          } else {
+            query = slii
+            .select()
+            .from("table1");
+          }
+
+          query.run(function(rows, ok, ng) {
+            console.log("select run.");
+
+            view.innerHTML = "";
+
+            for(var i = 0, l = rows.length; i < l; i = i + 1) {
+              var li = document.createElement("li");
+              li.innerHTML = rows[i].word;
+
+              view.appendChild(li);
+            }
+
+            ok();
+          })
+          .then(function() {
+            console.log("select ok");
+          });
+
+        });
+
+        add.addEventListener("click", function(e) {
+          if(word.value !== "") {
+            slii.insertInto("table1", ["word"])
+            .values(word.value)
+            .run(function(num, ok, ng) {
+              console.log("insert run.");
+              console.log("add num: " + num);
+
+              ok();
+            });
+          }
+        });
+        del.addEventListener("click", function(e) {
+          if(word.value !== "") {
+            slii.deleteFrom("table1")
+            .where(function($) {
+              $.and("word").eq.value(word.value);
+            })
+            .run(function(num, ok, ng) {
+              console.log("delete run.");
+              console.log("delete num: " + num);
+
+              ok();
+            });
+          }
+        });
+        check.addEventListener("click", function(e) {
+
+        });
+      })
+      .then(function() {
+        console.log("slii open ok.");
+      });
+    }
+    init();
+  </script>
+</body>
+</html>
