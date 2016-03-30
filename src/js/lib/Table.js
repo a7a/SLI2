@@ -5,20 +5,20 @@
 
   var global = (0, eval)("this"),
       criteria2IDBQuery = require("criteria2IDBQuery").criteria2IDBQuery || global.criteria2IDBQuery,
-      SLIIOperator = require("./SLIIOperator.js").SLIIOperator,
+      SLI2Operator = require("./SLI2Operator.js").SLI2Operator,
       ERROR = require("../param/ERROR.js").ERROR;
 
   /**
   * @public
   * @class
   */
-  var Table = function Table(name, opt, slii) {
+  var Table = function Table(name, opt, sli2) {
     this._name = name;
-    this._slii_object = slii;
+    this._sli2_object = sli2;
     this.transaction = null;
     this.store = null;
     if(opt) {
-      slii.db.createObjectStore(name, opt);
+      sli2.db.createObjectStore(name, opt);
     }
     this._handling = null;
   };
@@ -39,8 +39,8 @@
     }
 
     var tra = transaction ||
-        this._slii_object.transaction ||
-        this._slii_object.db.transaction(this._name, "readwrite");
+        this._sli2_object.transaction ||
+        this._sli2_object.db.transaction(this._name, "readwrite");
 
     this.transaction = tra;
     this.store = tra.objectStore(this._name);
@@ -105,7 +105,7 @@
   */
   Table.prototype.destroy = function destroy() {
     this._name = null;
-    this._slii_object = null;
+    this._sli2_object = null;
     this.transaction = null;
     this.store = null;
     this._handling = "";
@@ -160,16 +160,16 @@
   */
   Table.prototype.create = function create(opt, success, error) {
     var table_name = this._name,
-        slii = this._slii_object,
+        sli2 = this._sli2_object,
         _success = typeof success === "function" ? success : function() {},
         _error = typeof error === "function" ? error : function() {};
 
-    slii.upgrade(function(db) {
+    sli2.upgrade(function(db) {
       if(db.objectStoreNames.contains(table_name)) {
         _error(ERROR.table_already_exist(table_name));
 
       } else {
-        slii.db.createObjectStore(table_name, opt);
+        sli2.db.createObjectStore(table_name, opt);
       }
     }, _success);
   };
@@ -183,17 +183,17 @@
   */
   Table.prototype.drop = function drop(success, error) {
     var table_name = this._name,
-        slii = this._slii_object,
+        sli2 = this._sli2_object,
         _success = typeof success === "function" ? success : function() {},
         _error = typeof error === "function" ? error : function() {};
 
-    slii.upgrade(function(db) {
+    sli2.upgrade(function(db) {
       if(!db.objectStoreNames.contains(table_name)) {
         _error(ERROR.table_not_exist(table_name));
 
       } else {
-        delete slii.tables[table_name];
-        slii.db.deleteObjectStore(table_name);
+        delete sli2.tables[table_name];
+        sli2.db.deleteObjectStore(table_name);
       }
     }, _success);
   };
@@ -210,12 +210,12 @@
   Table.prototype.createIndex = function createIndex(idx_name, idx_opt, success, error) {
     var that = this,
         table_name = this._name,
-        slii = this._slii_object,
+        sli2 = this._sli2_object,
         _success = typeof success === "function" ? success : function() {},
         _error = typeof error === "function" ? error : function() {};
 
-    slii.upgrade(function(db) {
-      var transaction = that.transaction || slii.db.transaction(table_name),
+    sli2.upgrade(function(db) {
+      var transaction = that.transaction || sli2.db.transaction(table_name),
           store = that.store || transaction.objectStore(table_name);
 
       if(!db.objectStoreNames.contains(table_name)) {
@@ -240,12 +240,12 @@
   Table.prototype.dropIndex = function dropIndex(idx_name, success) {
     var that = this,
         table_name = this._name,
-        slii = this._slii_object,
+        sli2 = this._sli2_object,
         _success = typeof success === "function" ? success : function() {};
 
-    slii.upgrade(function() {
+    sli2.upgrade(function() {
       var store = that.store,
-          //transaction = that.transaction || slii.transaction;
+          //transaction = that.transaction || sli2.transaction;
           transaction = that.transaction;
 
       if(store) {
@@ -255,7 +255,7 @@
         return transaction.objectStore(table_name).deleteIndex(idx_name);
 
       } else {
-        return slii.db.transaction(table_name).objectStore(table_name).deleteIndex(idx_name);
+        return sli2.db.transaction(table_name).objectStore(table_name).deleteIndex(idx_name);
       }
     }, _success);
   };
@@ -269,14 +269,14 @@
   * @returns {void}
   */
   Table.prototype.selectAll = function selectAll(alias, success, error) {
-    var slii_ope = new SLIIOperator(this._slii_object);
+    var sli2_ope = new SLI2Operator(this._sli2_object);
 
     var _success = typeof success === "function" ? success : function() {},
         _error = typeof error === "function" ? error : function() {};
 
     this.beginTransaction("readwrite", function(fulfill, reject) {
-      slii_ope.selectAll(this.store, alias, function(rows) {
-        slii_ope.close();
+      sli2_ope.selectAll(this.store, alias, function(rows) {
+        sli2_ope.close();
         fulfill(rows);
       }, reject);
     }, _success, _error);
@@ -294,7 +294,7 @@
   */
   Table.prototype.selectForQuery = function selectForQuery(where, table_name, alias, success, error) {
     var that = this,
-        slii_ope = new SLIIOperator(this._slii_object);
+        sli2_ope = new SLI2Operator(this._sli2_object);
 
     var _success = typeof success === "function" ? success : function() {},
         _error = typeof error === "function" ? error : function() {};
@@ -310,14 +310,14 @@
         stores[stores.length] = query_param[i].store;
         filters[filters.length] = query_param[i].filter;
         key_ranges[key_ranges.length] = criteria2IDBQuery.createIDBKeyRange(
-          query_param[i], that._slii_object._idb_objects.IDBKeyRange
+          query_param[i], that._sli2_object._idb_objects.IDBKeyRange
         );
       }
 
-      slii_ope.selectForStoresAndKeyRangesAndFilters(
+      sli2_ope.selectForStoresAndKeyRangesAndFilters(
         stores, key_ranges, filters, table_name, alias,
         function(rows) {
-          slii_ope.close();
+          sli2_ope.close();
           fulfill(rows);
         },
         reject
@@ -335,14 +335,14 @@
   * @returns {void}
   */
   Table.prototype.add = function add(data, success, error) {
-    var slii_ope = new SLIIOperator(this._slii_object);
+    var sli2_ope = new SLI2Operator(this._sli2_object);
 
     var _success = typeof success === "function" ? success : function() {},
         _error = typeof error === "function" ? error : function() {};
 
     this.beginTransaction("readwrite", function(fulfill, reject) {
-      slii_ope.add(this.store, data, function(num) {
-        slii_ope.close();
+      sli2_ope.add(this.store, data, function(num) {
+        sli2_ope.close();
         fulfill(num);
       }, reject);
     }, _success, _error);
@@ -357,14 +357,14 @@
   * @returns {void}
   */
   Table.prototype.put = function put(data, success, error) {
-    var slii_ope = new SLIIOperator(this._slii_object);
+    var sli2_ope = new SLI2Operator(this._sli2_object);
 
     var _success = typeof success === "function" ? success : function() {},
         _error = typeof error === "function" ? error : function() {};
 
     this.beginTransaction("readwrite", function(fulfill, reject) {
-      slii_ope.put(this.store, data, function(num) {
-        slii_ope.close();
+      sli2_ope.put(this.store, data, function(num) {
+        sli2_ope.close();
         fulfill(num);
       }, reject);
     }, _success, _error);
@@ -379,14 +379,14 @@
   * @returns {void}
   */
   Table.prototype.removeAll = function removeAll(success, error) {
-    var slii_ope = new SLIIOperator(this._slii_object);
+    var sli2_ope = new SLI2Operator(this._sli2_object);
 
     var _success = typeof success === "function" ? success : function() {},
         _error = typeof error === "function" ? error : function() {};
 
     this.beginTransaction("readwrite", function(fulfill, reject) {
-      slii_ope.deleteAll(this.store, function(num) {
-        slii_ope.close();
+      sli2_ope.deleteAll(this.store, function(num) {
+        sli2_ope.close();
         fulfill(num);
       }, reject);
     }, _success, _error);
@@ -402,7 +402,7 @@
   */
   Table.prototype.removeForQuery = function removeForQuery(where, success, error) {
     var that = this,
-        slii_ope = new SLIIOperator(this._slii_object);
+        sli2_ope = new SLI2Operator(this._sli2_object);
 
     var _success = typeof success === "function" ? success : function() {},
         _error = typeof error === "function" ? error : function() {};
@@ -418,14 +418,14 @@
         stores[stores.length] = query_param[i].store;
         filters[filters.length] = query_param[i].filter;
         key_ranges[key_ranges.length] = criteria2IDBQuery.createIDBKeyRange(
-          query_param[i], that._slii_object._idb_objects.IDBKeyRange
+          query_param[i], that._sli2_object._idb_objects.IDBKeyRange
         );
       }
 
-      slii_ope.deleteForStoresAndKeyRangesAndFilters(
+      sli2_ope.deleteForStoresAndKeyRangesAndFilters(
         stores, key_ranges, filters,
         function(num) {
-          slii_ope.close();
+          sli2_ope.close();
           fulfill(num);
         },
         reject
@@ -444,14 +444,14 @@
   * @returns {void}
   */
   Table.prototype.updateAll = function updateAll(data, success, error) {
-    var slii_ope = new SLIIOperator(this._slii_object);
+    var sli2_ope = new SLI2Operator(this._sli2_object);
 
     var _success = typeof success === "function" ? success : function() {},
         _error = typeof error === "function" ? error : function() {};
 
     this.beginTransaction("readwrite", function(fulfill, reject) {
-      slii_ope.updateAll(this.store, data, function(num) {
-        slii_ope.close();
+      sli2_ope.updateAll(this.store, data, function(num) {
+        sli2_ope.close();
         fulfill(num);
       }, reject);
     }, _success, _error);
@@ -468,7 +468,7 @@
   */
   Table.prototype.updateForQuery = function updateForQuery(where, data, success, error) {
     var that = this,
-        slii_ope = new SLIIOperator(this._slii_object);
+        sli2_ope = new SLI2Operator(this._sli2_object);
 
     var _success = typeof success === "function" ? success : function() {},
         _error = typeof error === "function" ? error : function() {};
@@ -484,14 +484,14 @@
         stores[stores.length] = query_param[i].store;
         filters[filters.length] = query_param[i].filter;
         key_ranges[key_ranges.length] = criteria2IDBQuery.createIDBKeyRange(
-          query_param[i], that._slii_object._idb_objects.IDBKeyRange
+          query_param[i], that._sli2_object._idb_objects.IDBKeyRange
         );
       }
 
-      slii_ope.updateForStoresAndKeyRangesAndFilters(
+      sli2_ope.updateForStoresAndKeyRangesAndFilters(
         stores, key_ranges, filters, data,
         function(num) {
-          slii_ope.close();
+          sli2_ope.close();
           fulfill(num);
         },
         reject

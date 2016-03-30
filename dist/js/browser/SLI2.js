@@ -2852,7 +2852,7 @@ module.exports=require(4)
 },{}],22:[function(require,module,exports){
 module.exports=require(5)
 },{}],23:[function(require,module,exports){
-/* SLII.js */
+/* SLI2.js */
 
 (function(cxt) {
   "use strict";
@@ -2872,7 +2872,7 @@ module.exports=require(5)
   * @param {Object} opt - option
   *   opt.mode {String} -
   */
-  var SLII = function SLII(name, opt) {
+  var SLI2 = function SLI2(name, opt) {
     this._name = name;
     this.db = null;
     this.transaction = null;
@@ -2900,29 +2900,29 @@ module.exports=require(5)
   };
 
   /** constants */
-  SLII.USE_IDB = "idb";
-  SLII.NO_IDB = "no_idb";
-  SLII.READ_WRITE = "readwrite";
-  SLII.READ_ONLY = "readonly";
-  SLII.DEFAULT_UPGRADING_HANDLER = "slii_upgrade";
-  SLII.DEFAULT_TRANSACTION_HANDLER = "slii_transaction";
+  SLI2.USE_IDB = "idb";
+  SLI2.NO_IDB = "no_idb";
+  SLI2.READ_WRITE = "readwrite";
+  SLI2.READ_ONLY = "readonly";
+  SLI2.DEFAULT_UPGRADING_HANDLER = "sli2_upgrade";
+  SLI2.DEFAULT_TRANSACTION_HANDLER = "sli2_transaction";
 
   /**
   * @public
   * @function
   * @returns {void}
   */
-  SLII.prototype.useIndexedDB = function useIndexedDB() {
+  SLI2.prototype.useIndexedDB = function useIndexedDB() {
     this._idb_objects = idbInit();
 
     if(this._idb_objects === null) {
       throw ERROR.idb_objects_not_exists;
 
     } else {
-      if(this._mode === SLII.NO_IDB) {
+      if(this._mode === SLI2.NO_IDB) {
         this._opened = false;
       }
-      this._mode = SLII.USE_IDB;
+      this._mode = SLI2.USE_IDB;
       this._use_idb = true;
     }
   };
@@ -2935,12 +2935,12 @@ module.exports=require(5)
   *   "no_idb" is not available indexedDB(usable select method only)
   * @returns {void}
   */
-  SLII.prototype.setMode = function setMode(mode) {
-    if(mode === SLII.USE_IDB) {
+  SLI2.prototype.setMode = function setMode(mode) {
+    if(mode === SLI2.USE_IDB) {
       this.useIndexedDB();
 
-    } else if(mode === SLII.NO_IDB) {
-      this._mode = SLII.NO_IDB;
+    } else if(mode === SLI2.NO_IDB) {
+      this._mode = SLI2.NO_IDB;
       this._idb_objects = null;
       this._use_idb = false;
       this._opened = true;
@@ -2954,7 +2954,7 @@ module.exports=require(5)
   * @function
   * @returns {DatabaseDefinition}
   */
-  SLII.createDatabaseDefinition = function createDatabaseDefinition() {
+  SLI2.createDatabaseDefinition = function createDatabaseDefinition() {
     return new DatabaseDefinition();
   };
 
@@ -2965,11 +2965,11 @@ module.exports=require(5)
   * @param {Function} block_proc - request blocking process
   * @returns {Promise}
   */
-  SLII.prototype.deleteDatabase = function deleteDatabase(name, block_proc) {
+  SLI2.prototype.deleteDatabase = function deleteDatabase(name, block_proc) {
     var that = this;
 
     return new Promise(function(fulfill, reject) {
-      if(that._mode === SLII.NO_IDB) {
+      if(that._mode === SLI2.NO_IDB) {
         reject(ERROR.mode_is_no_idb);
         return;
 
@@ -2997,7 +2997,7 @@ module.exports=require(5)
   * @function
   * @returns {void}
   */
-  SLII.prototype._initTables = function _initTables() {
+  SLI2.prototype._initTables = function _initTables() {
     var db = this.db;
 
     for(var i = 0, l = db.objectStoreNames.length; i < l; i = i + 1) {
@@ -3013,7 +3013,7 @@ module.exports=require(5)
   * @function
   * @returns {void}
   */
-  SLII.prototype._openTables = function _openTables(tra, handling, tables) {
+  SLI2.prototype._openTables = function _openTables(tra, handling, tables) {
     var _tables = tables || this.tables;
 
     for(var table_name in _tables) {
@@ -3026,7 +3026,7 @@ module.exports=require(5)
   * @function
   * @returns {void}
   */
-  SLII.prototype._closeTables = function _closeTables(handling, tables) {
+  SLI2.prototype._closeTables = function _closeTables(handling, tables) {
     var _tables = tables || this.tables;
 
     for(var table_name in _tables) {
@@ -3039,7 +3039,7 @@ module.exports=require(5)
   * @function
   * @return {void}
   */
-  SLII.prototype._destroyTables = function _destroyTables() {
+  SLI2.prototype._destroyTables = function _destroyTables() {
     for(var table_name in this.tables) {
       this.tables[table_name].destroy();
     }
@@ -3051,7 +3051,7 @@ module.exports=require(5)
   * @param {IDBDatabase} db -
   * @returns {void}
   */
-  SLII.prototype._initInOpen = function _initInOpen(db) {
+  SLI2.prototype._initInOpen = function _initInOpen(db) {
     this.db = db;
     if(this._version === 0) {
       this._version = db.version;
@@ -3065,7 +3065,7 @@ module.exports=require(5)
   * @function
   * @returns {Boolean}
   */
-  SLII.prototype.isUpgrading = function isUpgrading() {
+  SLI2.prototype.isUpgrading = function isUpgrading() {
     return this._upgrading;
   };
 
@@ -3074,7 +3074,7 @@ module.exports=require(5)
   * @funciton
   * @returns {Boolean}
   */
-  SLII.prototype.isTransacting = function isTransacting() {
+  SLI2.prototype.isTransacting = function isTransacting() {
     return this._transacting;
   };
 
@@ -3084,7 +3084,7 @@ module.exports=require(5)
   * @param {DatabaseDefinition} db_def
   * @returns {Promise}
   */
-  SLII.prototype.open = function open(db_def) {
+  SLI2.prototype.open = function open(db_def) {
     var that = this,
         req = null,
         version_map = [],
@@ -3095,7 +3095,7 @@ module.exports=require(5)
     return new Promise(function(fulfill, reject) {
       var error = null;
 
-      if(that._mode === SLII.NO_IDB) {
+      if(that._mode === SLI2.NO_IDB) {
         reject(ERROR.mode_is_no_idb);
         return;
 
@@ -3304,7 +3304,7 @@ module.exports=require(5)
   * @function
   * @retuns {Promise}
   */
-  SLII.prototype.close = function close() {
+  SLI2.prototype.close = function close() {
     var that = this;
 
     return new Promise(function(fulfill) {
@@ -3340,7 +3340,7 @@ module.exports=require(5)
   * @function
   * @returns {Promise}
   */
-  SLII.prototype.destroy = function destroy() {
+  SLI2.prototype.destroy = function destroy() {
     var that = this;
 
     return this.close()
@@ -3356,7 +3356,7 @@ module.exports=require(5)
   * @function
   * @returns {Number}
   */
-  SLII.prototype.getCurrentVersion = function getCurrentVersion() {
+  SLI2.prototype.getCurrentVersion = function getCurrentVersion() {
     return this._version;
   };
 
@@ -3365,8 +3365,8 @@ module.exports=require(5)
   * @function
   * @returns {Number}
   */
-  SLII.prototype.getNewVersion = function getNewVersion() {
-    if(this._mode === SLII.NO_IDB) {
+  SLI2.prototype.getNewVersion = function getNewVersion() {
+    if(this._mode === SLI2.NO_IDB) {
       throw ERROR.mode_is_no_idb;
 
     } else if(!this._opened) {
@@ -3389,8 +3389,8 @@ module.exports=require(5)
   * @param {Function} func - transaction process
   * @returns {Promise}
   */
-  SLII.prototype.begin_transaction =
-  SLII.prototype.beginTransaction = function beginTransaction(table_names, type, func) {
+  SLI2.prototype.begin_transaction =
+  SLI2.prototype.beginTransaction = function beginTransaction(table_names, type, func) {
     var that = this;
 
     return new Promise(function(fulfill, reject) {
@@ -3403,7 +3403,7 @@ module.exports=require(5)
         that._transacting = false;
 
         try {
-          that._closeTables("slii_transaction", _tables);
+          that._closeTables("sli2_transaction", _tables);
 
         } catch(err) {
           reject(err);
@@ -3416,7 +3416,7 @@ module.exports=require(5)
         _table_names[0] = table_names;
       }
 
-      if(that._mode === SLII.NO_IDB) {
+      if(that._mode === SLI2.NO_IDB) {
         reject(ERROR.mode_is_no_idb);
 
       } else if(!that._opened) {
@@ -3456,7 +3456,7 @@ module.exports=require(5)
         that.transaction = tra;
 
         try {
-          that._openTables(tra, "slii_transaction", _tables);
+          that._openTables(tra, "sli2_transaction", _tables);
 
         } catch(err) {
           reject(err);
@@ -3491,14 +3491,14 @@ module.exports=require(5)
   * @param {Function} end - callback to process end
   * @returns {Promise}
   */
-  SLII.prototype.upgrade = function upgrade(exec, end) {
+  SLI2.prototype.upgrade = function upgrade(exec, end) {
     var that = this;
 
     return new Promise(function(fulfill, reject) {
       var _exec = typeof exec === "function" ? exec : function() {},
           _end = typeof end === "function" ? end : function() {};
 
-      if(that._mode === SLII.NO_IDB) {
+      if(that._mode === SLI2.NO_IDB) {
         reject(ERROR.mode_is_no_idb);
 
       } else if(!that._upgrade_enable) {
@@ -3526,7 +3526,7 @@ module.exports=require(5)
           };
           that.db = db;
           that.transaction = tra;
-          that._openTables(tra, "slii_upgrade");
+          that._openTables(tra, "sli2_upgrade");
 
           try {
             that._tasker.auto_run = false;
@@ -3547,7 +3547,7 @@ module.exports=require(5)
             that.db = e.target.result;
           }
           that.transaction = null;
-          that._closeTables("slii_upgrade");
+          that._closeTables("sli2_upgrade");
 
           _end();
           fulfill();
@@ -3576,7 +3576,7 @@ module.exports=require(5)
   * @params {Function} func - callback function
   * @returns {void}
   */
-  SLII.prototype.addTask = function addTask(obj, func) {
+  SLI2.prototype.addTask = function addTask(obj, func) {
     if(this._closed) {
       throw ERROR.closed;
     }
@@ -3591,7 +3591,7 @@ module.exports=require(5)
   * @description
   *   run process from task queue
   */
-  SLII.prototype.runQueue = function runQueue() {
+  SLI2.prototype.runQueue = function runQueue() {
     if(this._closed) {
       throw ERROR.closed;
     }
@@ -3606,11 +3606,11 @@ module.exports=require(5)
   * @param {Object} opt -
   * @retuns {Ddl}
   */
-  SLII.prototype.create_table =
-  SLII.prototype.createTable = function createTable(name, opt) {
+  SLI2.prototype.create_table =
+  SLI2.prototype.createTable = function createTable(name, opt) {
     var _opt = opt ? opt : { autoIncrement: true };
 
-    if(this._mode === SLII.NO_IDB) {
+    if(this._mode === SLI2.NO_IDB) {
       throw ERROR.mode_is_no_idb;
 
     } else if(!this._upgrade_enable) {
@@ -3635,9 +3635,9 @@ module.exports=require(5)
   * @param {String} name -
   * @returns {Ddl}
   */
-  SLII.prototype.drop_table =
-  SLII.prototype.dropTable = function dropTable(name) {
-    if(this._mode === SLII.NO_IDB) {
+  SLI2.prototype.drop_table =
+  SLI2.prototype.dropTable = function dropTable(name) {
+    if(this._mode === SLI2.NO_IDB) {
       throw ERROR.mode_is_no_idb;
 
     } else if(!this._upgrade_enable) {
@@ -3663,9 +3663,9 @@ module.exports=require(5)
   * @param {Object} opt - createIndex option
   * @returns {Ddl}
   */
-  SLII.prototype.create_index =
-  SLII.prototype.createIndex = function createIndex(table_name, idx_name, opt) {
-    if(this._mode === SLII.NO_IDB) {
+  SLI2.prototype.create_index =
+  SLI2.prototype.createIndex = function createIndex(table_name, idx_name, opt) {
+    if(this._mode === SLI2.NO_IDB) {
       throw ERROR.mode_is_no_idb;
 
     } else if(!this._upgrade_enable) {
@@ -3693,9 +3693,9 @@ module.exports=require(5)
   * @param {String} idx_name - target index name
   * @returns {Promise}
   */
-  SLII.prototype.drop_index =
-  SLII.prototype.dropIndex = function dropIndex(table_name, idx_name) {
-    if(this._mode === SLII.NO_IDB) {
+  SLI2.prototype.drop_index =
+  SLI2.prototype.dropIndex = function dropIndex(table_name, idx_name) {
+    if(this._mode === SLI2.NO_IDB) {
       throw ERROR.mode_is_no_idb;
 
     } else if(!this._opened) {
@@ -3719,7 +3719,7 @@ module.exports=require(5)
   * @param {Function} selection
   * @returns {Dml}
   */
-  SLII.prototype.select = function select(selection) {
+  SLI2.prototype.select = function select(selection) {
     if(!this._opened) {
       throw ERROR.not_open;
 
@@ -3739,9 +3739,9 @@ module.exports=require(5)
   * @param {Array} columns - insert target columns
   * @returns {Dml}
   */
-  SLII.prototype.insert_into =
-  SLII.prototype.insertInto = function insert_into(table, columns) {
-    if(this._mode === SLII.NO_IDB) {
+  SLI2.prototype.insert_into =
+  SLI2.prototype.insertInto = function insert_into(table, columns) {
+    if(this._mode === SLI2.NO_IDB) {
       throw ERROR.mode_is_no_idb;
 
     } else if(!this._opened) {
@@ -3762,9 +3762,9 @@ module.exports=require(5)
   * @param {String} table - delete target table
   * @returns {Dml}
   */
-  SLII.prototype.delete_from =
-  SLII.prototype.deleteFrom = function delete_from(table) {
-    if(this._mode === SLII.NO_IDB) {
+  SLI2.prototype.delete_from =
+  SLI2.prototype.deleteFrom = function delete_from(table) {
+    if(this._mode === SLI2.NO_IDB) {
       throw ERROR.mode_is_no_idb;
 
     } else if(!this._opened) {
@@ -3785,8 +3785,8 @@ module.exports=require(5)
   * @param {String} table - update target table
   * @returns {Dml}
   */
-  SLII.prototype.update = function update(table) {
-    if(this._mode === SLII.NO_IDB) {
+  SLI2.prototype.update = function update(table) {
+    if(this._mode === SLI2.NO_IDB) {
       throw ERROR.mode_is_no_idb;
 
     } else if(!this._opened) {
@@ -3806,8 +3806,8 @@ module.exports=require(5)
   * @function
   * @returns {void}
   */
-  SLII.prototype.rollback = function rollback() {
-    if(this._mode === SLII.NO_IDB) {
+  SLI2.prototype.rollback = function rollback() {
+    if(this._mode === SLI2.NO_IDB) {
       throw ERROR.mode_is_no_idb;
 
     } else if(!this._opened) {
@@ -3827,7 +3827,7 @@ module.exports=require(5)
   };
 
 
-  cxt.SLII = SLII;
+  cxt.SLI2 = SLI2;
 
 })((0, eval)("this").window || this);
 
@@ -4197,11 +4197,11 @@ module.exports=require(5)
     }
 
     var that = this,
-        slii = this._slii_object,
+        sli2 = this._sli2_object,
         _end = typeof end === "function" ? end : function() {},
         _error = typeof error === "function" ? error : function() {};
 
-    if(slii === void 0 || slii === null) {
+    if(sli2 === void 0 || sli2 === null) {
       throw ERROR.querable_is_not_initialized;
     }
 
@@ -4222,27 +4222,27 @@ module.exports=require(5)
     if(this._set_create_table) {
       _reject = _exec_reject("create_table");
 
-      if(slii.tables[this._table_name]) {
+      if(sli2.tables[this._table_name]) {
         _reject(ERROR.table_already_exist(this._table_name));
 
       } else {
-        var table = new Table(this._table_name, null, slii);
+        var table = new Table(this._table_name, null, sli2);
 
         table.create(
           this._option,
           function() {
             var handler = "";
 
-            slii.tables[that._table_name] = table;
+            sli2.tables[that._table_name] = table;
 
-            if(slii.isUpgrading()) {
-              handler = slii.constructor.DEFAULT_UPGRADING_HANDLER;
+            if(sli2.isUpgrading()) {
+              handler = sli2.constructor.DEFAULT_UPGRADING_HANDLER;
 
-            } else if(slii.isTransacting()) {
+            } else if(sli2.isTransacting()) {
               _reject(ERROR.cannot_execute("create_table in transacting"));
             }
 
-            table.open(slii.transactio, handler);
+            table.open(sli2.transactio, handler);
             _func(table, _exec_fulfill, _reject);
             if(!handler) {
               table.close(handler);
@@ -4258,11 +4258,11 @@ module.exports=require(5)
     } else if(this._set_drop_table) {
       _reject = _exec_reject("drop_table");
 
-      if(!slii.tables[this._table_name]) {
+      if(!sli2.tables[this._table_name]) {
         _reject(ERROR.table_not_exist(this._table_name));
 
       } else {
-        slii.tables[this._table_name].drop(
+        sli2.tables[this._table_name].drop(
           function() {
             _func(null, _exec_fulfill, _reject);
           },
@@ -4277,11 +4277,11 @@ module.exports=require(5)
     } else if(this._set_create_index) {
       _reject = _exec_reject("create_index");
 
-      if(!slii.tables[this._table_name]) {
+      if(!sli2.tables[this._table_name]) {
         _reject(ERROR.table_not_exist(this._table_name));
 
       } else {
-        slii.tables[this._table_name].createIndex(
+        sli2.tables[this._table_name].createIndex(
           this._index_name, this._option,
           function() {
             _func(null, _exec_fulfill, _reject);
@@ -4296,11 +4296,11 @@ module.exports=require(5)
     } else if(this._set_drop_index) {
       _reject = _exec_reject("drop_index");
 
-      if(!slii.tables[this._table_name]) {
+      if(!sli2.tables[this._table_name]) {
         _reject(ERROR.table_not_exist(this._table_name));
 
       } else {
-        slii.tables[this._table_name].dropIndex(
+        sli2.tables[this._table_name].dropIndex(
           this._index_name,
           function() {
             _func(null, _exec_fulfill, _reject);
@@ -4341,9 +4341,9 @@ module.exports=require(5)
   * @class
   * @arguments Querable
   */
-  var Dml = function Dml(/*slii*/) {
+  var Dml = function Dml(/*sli2*/) {
     Querable.apply(this, arguments);
-    //this._slii_object = slii;
+    //this._sli2_object = sli2;
     this._check_arguments = true;
     this._set_select = false;
     this._set_from = false;
@@ -4807,7 +4807,7 @@ module.exports=require(5)
       // join_taget is table_name
       // create select-query from join_target
       this._joins[idx] = [
-        new Dml(this._slii_object).select().from(join_target), kri, null, join_target, _type
+        new Dml(this._sli2_object).select().from(join_target), kri, null, join_target, _type
       ];
 
     } else if(Array.isArray(join_target)) {
@@ -4971,7 +4971,7 @@ module.exports=require(5)
       throw ERROR.invalid_description("union");
     }
 
-    var new_querable = new Dml(this._slii_object);
+    var new_querable = new Dml(this._sli2_object);
     new_querable.forceSelectQuery(true);
     new_querable.addUnions(this, "union");
 
@@ -4990,7 +4990,7 @@ module.exports=require(5)
       throw ERROR.invalid_description("union_all");
     }
 
-    var new_querable = new Dml(this._slii_object);
+    var new_querable = new Dml(this._sli2_object);
     new_querable.forceSelectQuery(true);
     new_querable.addUnions(this, "union_all");
 
@@ -5159,7 +5159,7 @@ module.exports=require(5)
     }
 
     var that = this,
-        slii = this._slii_object,
+        sli2 = this._sli2_object,
         _end = typeof end === "function" ? end : function() {},
         _error = typeof error === "function" ? error : function() {},
         union_rows = [],
@@ -5167,7 +5167,7 @@ module.exports=require(5)
         j = 0, l2 = 0,
         k = 0, l3 = 0;
 
-    if(slii === void 0 || slii === null) {
+    if(sli2 === void 0 || sli2 === null) {
       throw ERROR.querable_is_not_initialized;
     }
 
@@ -5188,7 +5188,7 @@ module.exports=require(5)
     if(that.isInsertQuery()) {
       _reject = _exec_reject("insert_into");
 
-      if(!slii.tables[that._insert_table]) {
+      if(!sli2.tables[that._insert_table]) {
         _reject(ERROR.table_not_exist(that._insert_table));
         return;
       }
@@ -5221,7 +5221,7 @@ module.exports=require(5)
           }
         }
 
-        slii.tables[that._insert_table].add(
+        sli2.tables[that._insert_table].add(
           insert_data,
           function(num) {
             _func(num, _exec_fulfill, _reject);
@@ -5242,13 +5242,13 @@ module.exports=require(5)
     } else if(that.isDeleteQuery()) {
       _reject = _exec_reject("delete_from");
 
-      if(!slii.tables[that._delete_table]) {
+      if(!sli2.tables[that._delete_table]) {
         _reject(ERROR.table_not_exist(that._delete_table));
         return;
       }
 
       if(that._where) {
-        slii.tables[that._delete_table].removeForQuery(
+        sli2.tables[that._delete_table].removeForQuery(
           that._where,
           function(num) {
             _func(num, _exec_fulfill, _reject);
@@ -5256,7 +5256,7 @@ module.exports=require(5)
         );
 
       } else {
-        slii.tables[that._delete_table].removeAll(
+        sli2.tables[that._delete_table].removeAll(
           function(num) {
             _func(num, _exec_fulfill, _reject);
           }, _reject
@@ -5267,13 +5267,13 @@ module.exports=require(5)
     // *** Update Query ***
     // ##############################
     } else if(that.isUpdateQuery()) {
-      if(!slii.tables[that._update_table]) {
+      if(!sli2.tables[that._update_table]) {
         _reject(ERROR.table_not_exist(that._update_table));
         return;
       }
 
       if(that._where) {
-        slii.tables[that._update_table].updateForQuery(
+        sli2.tables[that._update_table].updateForQuery(
           that._where,
           that._update_data,
           function(num) {
@@ -5282,7 +5282,7 @@ module.exports=require(5)
         );
 
       } else {
-        slii.tables[that._update_table].updateAll(
+        sli2.tables[that._update_table].updateAll(
           that._update_data,
           function(num) {
             _func(num, _exec_fulfill, _reject);
@@ -5366,7 +5366,7 @@ module.exports=require(5)
       // **** select ****
       new Promise(function(fulfill1, reject1) {
         if(that._select_table) {
-          if(!slii.tables[that._select_table]) {
+          if(!sli2.tables[that._select_table]) {
             _reject(ERROR.table_not_exist(that._select_table));
             return;
           }
@@ -5375,7 +5375,7 @@ module.exports=require(5)
 
           if(splited_where[that._select_table]) {
             // select ... from table where ...
-            slii.tables[that._select_table].selectForQuery(
+            sli2.tables[that._select_table].selectForQuery(
               extract_where,//.removePrefixes([that._select_table || that._table_alias]),
               splited_where[that._select_table] ? that._select_table : that._tablea_alias,
               that._table_alias || (that._joins.length > 0 ? that._select_table : ""),
@@ -5387,7 +5387,7 @@ module.exports=require(5)
 
           } else {
             // select ... from table
-            slii.tables[that._select_table].selectAll(
+            sli2.tables[that._select_table].selectAll(
               that._joins.length > 0 ? that._table_alias || that._select_table : that._table_alias,
               function(rows) {
                 _exec_fulfill();
@@ -5794,8 +5794,8 @@ module.exports=require(5)
   * @public
   * @class
   */
-  var Querable = function Querable(slii) {
-    this._slii_object = slii;
+  var Querable = function Querable(sli2) {
+    this._sli2_object = sli2;
   };
 
   /**
@@ -5819,14 +5819,14 @@ module.exports=require(5)
     }
 
     var that = this,
-        slii = this._slii_object;
+        sli2 = this._sli2_object;
 
-    if(slii === void 0 || slii === null) {
+    if(sli2 === void 0 || sli2 === null) {
       throw ERROR.querable_is_not_initialized;
     }
 
     return new Promise(function(fulfill/*, reject*/) {
-      slii.addTask(that, function(idb_result, exec_fulfill, exec_reject) {
+      sli2.addTask(that, function(idb_result, exec_fulfill, exec_reject) {
         if(typeof func === "function") {
           func(
             idb_result,
@@ -5868,7 +5868,7 @@ module.exports=require(5)
 })(this);
 
 },{"../param/ERROR.js":36}],28:[function(require,module,exports){
-/* SLIIOperator.js */
+/* SLI2Operator.js */
 
 (function(cxt) {
   "use strict";
@@ -5880,8 +5880,8 @@ module.exports=require(5)
   * @public
   * @class
   */
-  var SLIIOperator = function SLIIOperator(slii) {
-    this._slii_object = slii;
+  var SLI2Operator = function SLI2Operator(sli2) {
+    this._sli2_object = sli2;
     this._closed = false;
   };
 
@@ -5890,8 +5890,8 @@ module.exports=require(5)
   * @function
   * @returns {void}
   */
-  SLIIOperator.prototype.close = function close() {
-    this._slii_object = null;
+  SLI2Operator.prototype.close = function close() {
+    this._sli2_object = null;
     this._closed = true;
   };
 
@@ -5904,7 +5904,7 @@ module.exports=require(5)
   * @param {Function} error - callback on errored
   * @return {void}
   */
-  SLIIOperator.prototype.add = function add(store, data, success, error) {
+  SLI2Operator.prototype.add = function add(store, data, success, error) {
     if(this._closed) {
       throw ERROR.closed;
     }
@@ -5951,7 +5951,7 @@ module.exports=require(5)
   * @param {Function} error - callback on errored
   * @return {void}
   */
-  SLIIOperator.prototype.put = function put(store, data, success, error) {
+  SLI2Operator.prototype.put = function put(store, data, success, error) {
     if(this._closed) {
       throw ERROR.closed;
     }
@@ -5998,7 +5998,7 @@ module.exports=require(5)
   * @param {Function} error - callback on errored
   * @returns {void}
   */
-  SLIIOperator.prototype.selectAll = function selectAll(store, alias, success, error) {
+  SLI2Operator.prototype.selectAll = function selectAll(store, alias, success, error) {
     if(this._closed) {
       throw ERROR.closed;
     }
@@ -6056,7 +6056,7 @@ module.exports=require(5)
   * @param {Function} error - callback on errored
   * @returns {void}
   */
-  SLIIOperator.prototype.selectForStoresAndKeyRangesAndFilters = function selectForStoresAndKeyRangesAndFilters(
+  SLI2Operator.prototype.selectForStoresAndKeyRangesAndFilters = function selectForStoresAndKeyRangesAndFilters(
     stores, key_ranges, filters, table_name, alias, success, error
   ) {
     if(this._closed) {
@@ -6131,7 +6131,7 @@ module.exports=require(5)
   * @param {Function} error - callback on errored
   * @returns {void}
   */
-  SLIIOperator.prototype.deleteAll = function deleteAll(store, success, error) {
+  SLI2Operator.prototype.deleteAll = function deleteAll(store, success, error) {
     if(this._closed) {
       throw ERROR.closed;
     }
@@ -6168,7 +6168,7 @@ module.exports=require(5)
   * @param {Function} error - callback on errored
   * @returns {void}
   */
-  SLIIOperator.prototype.deleteForStoresAndKeyRangesAndFilters = function deleteForStoresAndKeyRangesAndFilters(
+  SLI2Operator.prototype.deleteForStoresAndKeyRangesAndFilters = function deleteForStoresAndKeyRangesAndFilters(
     stores, key_ranges, filters, success, error
   ) {
     if(this._closed) {
@@ -6231,7 +6231,7 @@ module.exports=require(5)
   * @param {Function} error - callback on errored
   * @returns {void}
   */
-  SLIIOperator.prototype.updateAll = function updateAll(store, data, success, error) {
+  SLI2Operator.prototype.updateAll = function updateAll(store, data, success, error) {
     if(this._closed) {
       throw ERROR.closed;
     }
@@ -6274,7 +6274,7 @@ module.exports=require(5)
   * @param {Function} error - callback on errored
   * @returns {void}
   */
-  SLIIOperator.prototype.updateForStoresAndKeyRangesAndFilters = function updateForStoresAndKeyRangesAndFilters(
+  SLI2Operator.prototype.updateForStoresAndKeyRangesAndFilters = function updateForStoresAndKeyRangesAndFilters(
     stores, key_ranges, filters, data, success, error
   ) {
     if(this._closed) {
@@ -6335,7 +6335,7 @@ module.exports=require(5)
   };
 
 
-  cxt.SLIIOperator = SLIIOperator;
+  cxt.SLI2Operator = SLI2Operator;
 
 })(this);
 
@@ -6701,20 +6701,20 @@ module.exports=require(5)
 
   var global = (0, eval)("this"),
       criteria2IDBQuery = require("criteria2IDBQuery").criteria2IDBQuery || global.criteria2IDBQuery,
-      SLIIOperator = require("./SLIIOperator.js").SLIIOperator,
+      SLI2Operator = require("./SLI2Operator.js").SLI2Operator,
       ERROR = require("../param/ERROR.js").ERROR;
 
   /**
   * @public
   * @class
   */
-  var Table = function Table(name, opt, slii) {
+  var Table = function Table(name, opt, sli2) {
     this._name = name;
-    this._slii_object = slii;
+    this._sli2_object = sli2;
     this.transaction = null;
     this.store = null;
     if(opt) {
-      slii.db.createObjectStore(name, opt);
+      sli2.db.createObjectStore(name, opt);
     }
     this._handling = null;
   };
@@ -6735,8 +6735,8 @@ module.exports=require(5)
     }
 
     var tra = transaction ||
-        this._slii_object.transaction ||
-        this._slii_object.db.transaction(this._name, "readwrite");
+        this._sli2_object.transaction ||
+        this._sli2_object.db.transaction(this._name, "readwrite");
 
     this.transaction = tra;
     this.store = tra.objectStore(this._name);
@@ -6801,7 +6801,7 @@ module.exports=require(5)
   */
   Table.prototype.destroy = function destroy() {
     this._name = null;
-    this._slii_object = null;
+    this._sli2_object = null;
     this.transaction = null;
     this.store = null;
     this._handling = "";
@@ -6856,16 +6856,16 @@ module.exports=require(5)
   */
   Table.prototype.create = function create(opt, success, error) {
     var table_name = this._name,
-        slii = this._slii_object,
+        sli2 = this._sli2_object,
         _success = typeof success === "function" ? success : function() {},
         _error = typeof error === "function" ? error : function() {};
 
-    slii.upgrade(function(db) {
+    sli2.upgrade(function(db) {
       if(db.objectStoreNames.contains(table_name)) {
         _error(ERROR.table_already_exist(table_name));
 
       } else {
-        slii.db.createObjectStore(table_name, opt);
+        sli2.db.createObjectStore(table_name, opt);
       }
     }, _success);
   };
@@ -6879,17 +6879,17 @@ module.exports=require(5)
   */
   Table.prototype.drop = function drop(success, error) {
     var table_name = this._name,
-        slii = this._slii_object,
+        sli2 = this._sli2_object,
         _success = typeof success === "function" ? success : function() {},
         _error = typeof error === "function" ? error : function() {};
 
-    slii.upgrade(function(db) {
+    sli2.upgrade(function(db) {
       if(!db.objectStoreNames.contains(table_name)) {
         _error(ERROR.table_not_exist(table_name));
 
       } else {
-        delete slii.tables[table_name];
-        slii.db.deleteObjectStore(table_name);
+        delete sli2.tables[table_name];
+        sli2.db.deleteObjectStore(table_name);
       }
     }, _success);
   };
@@ -6906,12 +6906,12 @@ module.exports=require(5)
   Table.prototype.createIndex = function createIndex(idx_name, idx_opt, success, error) {
     var that = this,
         table_name = this._name,
-        slii = this._slii_object,
+        sli2 = this._sli2_object,
         _success = typeof success === "function" ? success : function() {},
         _error = typeof error === "function" ? error : function() {};
 
-    slii.upgrade(function(db) {
-      var transaction = that.transaction || slii.db.transaction(table_name),
+    sli2.upgrade(function(db) {
+      var transaction = that.transaction || sli2.db.transaction(table_name),
           store = that.store || transaction.objectStore(table_name);
 
       if(!db.objectStoreNames.contains(table_name)) {
@@ -6936,12 +6936,12 @@ module.exports=require(5)
   Table.prototype.dropIndex = function dropIndex(idx_name, success) {
     var that = this,
         table_name = this._name,
-        slii = this._slii_object,
+        sli2 = this._sli2_object,
         _success = typeof success === "function" ? success : function() {};
 
-    slii.upgrade(function() {
+    sli2.upgrade(function() {
       var store = that.store,
-          //transaction = that.transaction || slii.transaction;
+          //transaction = that.transaction || sli2.transaction;
           transaction = that.transaction;
 
       if(store) {
@@ -6951,7 +6951,7 @@ module.exports=require(5)
         return transaction.objectStore(table_name).deleteIndex(idx_name);
 
       } else {
-        return slii.db.transaction(table_name).objectStore(table_name).deleteIndex(idx_name);
+        return sli2.db.transaction(table_name).objectStore(table_name).deleteIndex(idx_name);
       }
     }, _success);
   };
@@ -6965,14 +6965,14 @@ module.exports=require(5)
   * @returns {void}
   */
   Table.prototype.selectAll = function selectAll(alias, success, error) {
-    var slii_ope = new SLIIOperator(this._slii_object);
+    var sli2_ope = new SLI2Operator(this._sli2_object);
 
     var _success = typeof success === "function" ? success : function() {},
         _error = typeof error === "function" ? error : function() {};
 
     this.beginTransaction("readwrite", function(fulfill, reject) {
-      slii_ope.selectAll(this.store, alias, function(rows) {
-        slii_ope.close();
+      sli2_ope.selectAll(this.store, alias, function(rows) {
+        sli2_ope.close();
         fulfill(rows);
       }, reject);
     }, _success, _error);
@@ -6990,7 +6990,7 @@ module.exports=require(5)
   */
   Table.prototype.selectForQuery = function selectForQuery(where, table_name, alias, success, error) {
     var that = this,
-        slii_ope = new SLIIOperator(this._slii_object);
+        sli2_ope = new SLI2Operator(this._sli2_object);
 
     var _success = typeof success === "function" ? success : function() {},
         _error = typeof error === "function" ? error : function() {};
@@ -7006,14 +7006,14 @@ module.exports=require(5)
         stores[stores.length] = query_param[i].store;
         filters[filters.length] = query_param[i].filter;
         key_ranges[key_ranges.length] = criteria2IDBQuery.createIDBKeyRange(
-          query_param[i], that._slii_object._idb_objects.IDBKeyRange
+          query_param[i], that._sli2_object._idb_objects.IDBKeyRange
         );
       }
 
-      slii_ope.selectForStoresAndKeyRangesAndFilters(
+      sli2_ope.selectForStoresAndKeyRangesAndFilters(
         stores, key_ranges, filters, table_name, alias,
         function(rows) {
-          slii_ope.close();
+          sli2_ope.close();
           fulfill(rows);
         },
         reject
@@ -7031,14 +7031,14 @@ module.exports=require(5)
   * @returns {void}
   */
   Table.prototype.add = function add(data, success, error) {
-    var slii_ope = new SLIIOperator(this._slii_object);
+    var sli2_ope = new SLI2Operator(this._sli2_object);
 
     var _success = typeof success === "function" ? success : function() {},
         _error = typeof error === "function" ? error : function() {};
 
     this.beginTransaction("readwrite", function(fulfill, reject) {
-      slii_ope.add(this.store, data, function(num) {
-        slii_ope.close();
+      sli2_ope.add(this.store, data, function(num) {
+        sli2_ope.close();
         fulfill(num);
       }, reject);
     }, _success, _error);
@@ -7053,14 +7053,14 @@ module.exports=require(5)
   * @returns {void}
   */
   Table.prototype.put = function put(data, success, error) {
-    var slii_ope = new SLIIOperator(this._slii_object);
+    var sli2_ope = new SLI2Operator(this._sli2_object);
 
     var _success = typeof success === "function" ? success : function() {},
         _error = typeof error === "function" ? error : function() {};
 
     this.beginTransaction("readwrite", function(fulfill, reject) {
-      slii_ope.put(this.store, data, function(num) {
-        slii_ope.close();
+      sli2_ope.put(this.store, data, function(num) {
+        sli2_ope.close();
         fulfill(num);
       }, reject);
     }, _success, _error);
@@ -7075,14 +7075,14 @@ module.exports=require(5)
   * @returns {void}
   */
   Table.prototype.removeAll = function removeAll(success, error) {
-    var slii_ope = new SLIIOperator(this._slii_object);
+    var sli2_ope = new SLI2Operator(this._sli2_object);
 
     var _success = typeof success === "function" ? success : function() {},
         _error = typeof error === "function" ? error : function() {};
 
     this.beginTransaction("readwrite", function(fulfill, reject) {
-      slii_ope.deleteAll(this.store, function(num) {
-        slii_ope.close();
+      sli2_ope.deleteAll(this.store, function(num) {
+        sli2_ope.close();
         fulfill(num);
       }, reject);
     }, _success, _error);
@@ -7098,7 +7098,7 @@ module.exports=require(5)
   */
   Table.prototype.removeForQuery = function removeForQuery(where, success, error) {
     var that = this,
-        slii_ope = new SLIIOperator(this._slii_object);
+        sli2_ope = new SLI2Operator(this._sli2_object);
 
     var _success = typeof success === "function" ? success : function() {},
         _error = typeof error === "function" ? error : function() {};
@@ -7114,14 +7114,14 @@ module.exports=require(5)
         stores[stores.length] = query_param[i].store;
         filters[filters.length] = query_param[i].filter;
         key_ranges[key_ranges.length] = criteria2IDBQuery.createIDBKeyRange(
-          query_param[i], that._slii_object._idb_objects.IDBKeyRange
+          query_param[i], that._sli2_object._idb_objects.IDBKeyRange
         );
       }
 
-      slii_ope.deleteForStoresAndKeyRangesAndFilters(
+      sli2_ope.deleteForStoresAndKeyRangesAndFilters(
         stores, key_ranges, filters,
         function(num) {
-          slii_ope.close();
+          sli2_ope.close();
           fulfill(num);
         },
         reject
@@ -7140,14 +7140,14 @@ module.exports=require(5)
   * @returns {void}
   */
   Table.prototype.updateAll = function updateAll(data, success, error) {
-    var slii_ope = new SLIIOperator(this._slii_object);
+    var sli2_ope = new SLI2Operator(this._sli2_object);
 
     var _success = typeof success === "function" ? success : function() {},
         _error = typeof error === "function" ? error : function() {};
 
     this.beginTransaction("readwrite", function(fulfill, reject) {
-      slii_ope.updateAll(this.store, data, function(num) {
-        slii_ope.close();
+      sli2_ope.updateAll(this.store, data, function(num) {
+        sli2_ope.close();
         fulfill(num);
       }, reject);
     }, _success, _error);
@@ -7164,7 +7164,7 @@ module.exports=require(5)
   */
   Table.prototype.updateForQuery = function updateForQuery(where, data, success, error) {
     var that = this,
-        slii_ope = new SLIIOperator(this._slii_object);
+        sli2_ope = new SLI2Operator(this._sli2_object);
 
     var _success = typeof success === "function" ? success : function() {},
         _error = typeof error === "function" ? error : function() {};
@@ -7180,14 +7180,14 @@ module.exports=require(5)
         stores[stores.length] = query_param[i].store;
         filters[filters.length] = query_param[i].filter;
         key_ranges[key_ranges.length] = criteria2IDBQuery.createIDBKeyRange(
-          query_param[i], that._slii_object._idb_objects.IDBKeyRange
+          query_param[i], that._sli2_object._idb_objects.IDBKeyRange
         );
       }
 
-      slii_ope.updateForStoresAndKeyRangesAndFilters(
+      sli2_ope.updateForStoresAndKeyRangesAndFilters(
         stores, key_ranges, filters, data,
         function(num) {
-          slii_ope.close();
+          sli2_ope.close();
           fulfill(num);
         },
         reject
@@ -7214,7 +7214,7 @@ module.exports=require(5)
 
 })(this);
 
-},{"../param/ERROR.js":36,"./SLIIOperator.js":28,"criteria2IDBQuery":8}],31:[function(require,module,exports){
+},{"../param/ERROR.js":36,"./SLI2Operator.js":28,"criteria2IDBQuery":8}],31:[function(require,module,exports){
 /* Tasker.js */
 (function(cxt) {
   "use strict";
@@ -7515,7 +7515,7 @@ module.exports=require(5)
   "use strict";
 
   var setFunction = {
-    // for SLIIOperator
+    // for SLI2Operator
     setWithTableNameAndAlias: function setWithTableNameAndAlias(_data, _out, _filter, _table_name, _alias) {
       var data_with_table_name = {};
       data_with_table_name[_table_name] = _data;
@@ -7636,16 +7636,16 @@ module.exports=require(5)
 
   var ERROR = {
     not_open:
-      new Error("SLII is not open."),
+      new Error("SLI2 is not open."),
     already_open:
-      new Error("SLII is already opened."),
+      new Error("SLI2 is already opened."),
     closed:
-      new Error("SLII is already closed."),
+      new Error("SLI2 is already closed."),
     no_version_map: function(version) {
-      return new Error("SLII has no version-map (" + version + ")");
+      return new Error("SLI2 has no version-map (" + version + ")");
     },
     no_definition: function(version) {
-      return new Error("SLII has no version-definition (" + version + ")");
+      return new Error("SLI2 has no version-definition (" + version + ")");
     },
     upgrade_error: function(err) {
       return new Error("Upgrade error: " + err.name + ": " + err.message + ".");
@@ -7660,9 +7660,9 @@ module.exports=require(5)
       new Error("Transaction already exist."),
     no_transaction: function(name) {
       if(name) {
-        return new Error("SLII has no transaction('" + name + "')");
+        return new Error("SLI2 has no transaction('" + name + "')");
       } else {
-        return new Error("SLII has no transaction.");
+        return new Error("SLI2 has no transaction.");
       }
     },
     table_already_exist: function(name) {
@@ -7689,8 +7689,8 @@ module.exports=require(5)
       return new Error("No options as '" + meth + "'");
     },
     idb_objects_not_exists: new Error("IDB objects not exists."),
-    idb_objects_not_used: new Error("IDB objects not used(not exec SLII#useIndexedDB)."),
-    mode_is_no_idb: new Error("SLII mode is 'no_idb'."),
+    idb_objects_not_used: new Error("IDB objects not used(not exec SLI2#useIndexedDB)."),
+    mode_is_no_idb: new Error("SLI2 mode is 'no_idb'."),
     upgrade_unable: new Error("Upgrade unable (upgrading only on DatabaseDefinition)"),
 
     invalid_description: function(meth) {
@@ -7702,7 +7702,7 @@ module.exports=require(5)
     invalid_state: function(meth) {
       return new Error("Invalid state: " + meth);
     },
-    querable_is_not_initialized: new Error("Dml is not initialized (no SLII object)."),
+    querable_is_not_initialized: new Error("Dml is not initialized (no SLI2 object)."),
     require_select_query: new Error("Joined qauery must be select query."),
     kriteria_prefix_conflict: function(prefix1, prefix2) {
       return new Error("Kriteria Error: key prefix conflict '" + prefix1 + "', '" + prefix2 + "'.");

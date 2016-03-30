@@ -21,9 +21,9 @@
   * @class
   * @arguments Querable
   */
-  var Dml = function Dml(/*slii*/) {
+  var Dml = function Dml(/*sli2*/) {
     Querable.apply(this, arguments);
-    //this._slii_object = slii;
+    //this._sli2_object = sli2;
     this._check_arguments = true;
     this._set_select = false;
     this._set_from = false;
@@ -487,7 +487,7 @@
       // join_taget is table_name
       // create select-query from join_target
       this._joins[idx] = [
-        new Dml(this._slii_object).select().from(join_target), kri, null, join_target, _type
+        new Dml(this._sli2_object).select().from(join_target), kri, null, join_target, _type
       ];
 
     } else if(Array.isArray(join_target)) {
@@ -651,7 +651,7 @@
       throw ERROR.invalid_description("union");
     }
 
-    var new_querable = new Dml(this._slii_object);
+    var new_querable = new Dml(this._sli2_object);
     new_querable.forceSelectQuery(true);
     new_querable.addUnions(this, "union");
 
@@ -670,7 +670,7 @@
       throw ERROR.invalid_description("union_all");
     }
 
-    var new_querable = new Dml(this._slii_object);
+    var new_querable = new Dml(this._sli2_object);
     new_querable.forceSelectQuery(true);
     new_querable.addUnions(this, "union_all");
 
@@ -839,7 +839,7 @@
     }
 
     var that = this,
-        slii = this._slii_object,
+        sli2 = this._sli2_object,
         _end = typeof end === "function" ? end : function() {},
         _error = typeof error === "function" ? error : function() {},
         union_rows = [],
@@ -847,7 +847,7 @@
         j = 0, l2 = 0,
         k = 0, l3 = 0;
 
-    if(slii === void 0 || slii === null) {
+    if(sli2 === void 0 || sli2 === null) {
       throw ERROR.querable_is_not_initialized;
     }
 
@@ -868,7 +868,7 @@
     if(that.isInsertQuery()) {
       _reject = _exec_reject("insert_into");
 
-      if(!slii.tables[that._insert_table]) {
+      if(!sli2.tables[that._insert_table]) {
         _reject(ERROR.table_not_exist(that._insert_table));
         return;
       }
@@ -901,7 +901,7 @@
           }
         }
 
-        slii.tables[that._insert_table].add(
+        sli2.tables[that._insert_table].add(
           insert_data,
           function(num) {
             _func(num, _exec_fulfill, _reject);
@@ -922,13 +922,13 @@
     } else if(that.isDeleteQuery()) {
       _reject = _exec_reject("delete_from");
 
-      if(!slii.tables[that._delete_table]) {
+      if(!sli2.tables[that._delete_table]) {
         _reject(ERROR.table_not_exist(that._delete_table));
         return;
       }
 
       if(that._where) {
-        slii.tables[that._delete_table].removeForQuery(
+        sli2.tables[that._delete_table].removeForQuery(
           that._where,
           function(num) {
             _func(num, _exec_fulfill, _reject);
@@ -936,7 +936,7 @@
         );
 
       } else {
-        slii.tables[that._delete_table].removeAll(
+        sli2.tables[that._delete_table].removeAll(
           function(num) {
             _func(num, _exec_fulfill, _reject);
           }, _reject
@@ -947,13 +947,13 @@
     // *** Update Query ***
     // ##############################
     } else if(that.isUpdateQuery()) {
-      if(!slii.tables[that._update_table]) {
+      if(!sli2.tables[that._update_table]) {
         _reject(ERROR.table_not_exist(that._update_table));
         return;
       }
 
       if(that._where) {
-        slii.tables[that._update_table].updateForQuery(
+        sli2.tables[that._update_table].updateForQuery(
           that._where,
           that._update_data,
           function(num) {
@@ -962,7 +962,7 @@
         );
 
       } else {
-        slii.tables[that._update_table].updateAll(
+        sli2.tables[that._update_table].updateAll(
           that._update_data,
           function(num) {
             _func(num, _exec_fulfill, _reject);
@@ -1046,7 +1046,7 @@
       // **** select ****
       new Promise(function(fulfill1, reject1) {
         if(that._select_table) {
-          if(!slii.tables[that._select_table]) {
+          if(!sli2.tables[that._select_table]) {
             _reject(ERROR.table_not_exist(that._select_table));
             return;
           }
@@ -1055,7 +1055,7 @@
 
           if(splited_where[that._select_table]) {
             // select ... from table where ...
-            slii.tables[that._select_table].selectForQuery(
+            sli2.tables[that._select_table].selectForQuery(
               extract_where,//.removePrefixes([that._select_table || that._table_alias]),
               splited_where[that._select_table] ? that._select_table : that._tablea_alias,
               that._table_alias || (that._joins.length > 0 ? that._select_table : ""),
@@ -1067,7 +1067,7 @@
 
           } else {
             // select ... from table
-            slii.tables[that._select_table].selectAll(
+            sli2.tables[that._select_table].selectAll(
               that._joins.length > 0 ? that._table_alias || that._select_table : that._table_alias,
               function(rows) {
                 _exec_fulfill();

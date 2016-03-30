@@ -23,9 +23,9 @@
   </div>
   <ul id="view"></ul>
 
-  <script src="../dist/js/browser/SLII.js"></script>
+  <script src="../dist/js/browser/SLI2.js"></script>
   <script>
-    var slii = new SLII("test_app");
+    var sli2 = new SLI2("test_app");
 
     var word = document.getElementById("word"),
         select = document.getElementById("select"),
@@ -38,36 +38,36 @@
     reset.addEventListener("click", function(e) {
       console.log("database reset.");
 
-//      slii.deleteDatabase()
+//      sli2.deleteDatabase()
 //      .then(function() {
-//        return slii.close();
+//        return sli2.close();
 //      })
 //      .then(function() {
 //        init();
 //      });
-      slii.deleteDatabase();
-      slii.close()
+      sli2.deleteDatabase();
+      sli2.close()
       .then(init);
 
     });
 
-    var def = SLII.createDatabaseDefinition();
-    def.setVersion(1, function(slii) {
+    var def = SLI2.createDatabaseDefinition();
+    def.setVersion(1, function(sli2) {
       console.log("set version 1.");
 
-      slii.createTable("table1").run();
+      sli2.createTable("table1").run();
     });
 
     function init() {
-      slii.open(def)
+      sli2.open(def)
       .then(function() {
-        console.log("slii open.");
+        console.log("sli2 open.");
 
         select.addEventListener("click", function(e) {
           var query = null;
 
           if(word.value !== "") {
-            query = slii
+            query = sli2
             .select()
             .from("table1")
             .where(function($) {
@@ -77,7 +77,7 @@
 
 
           } else {
-            query = slii
+            query = sli2
             .select()
             .from("table1");
           }
@@ -104,7 +104,7 @@
 
         add.addEventListener("click", function(e) {
           if(word.value !== "") {
-            slii.insertInto("table1", ["word"])
+            sli2.insertInto("table1", ["word"])
             .values(word.value)
             .run(function(num, ok, ng) {
               console.log("insert run.");
@@ -116,7 +116,7 @@
         });
         del.addEventListener("click", function(e) {
           if(word.value !== "") {
-            slii.deleteFrom("table1")
+            sli2.deleteFrom("table1")
             .where(function($) {
               $.and("word").eq.value(word.value);
             })
@@ -133,7 +133,7 @@
         });
       })
       .then(function() {
-        console.log("slii open ok.");
+        console.log("sli2 open ok.");
       });
     }
     init();

@@ -1,4 +1,4 @@
-/* SLIIOperator.js */
+/* SLI2Operator.js */
 
 (function(cxt) {
   "use strict";
@@ -10,8 +10,8 @@
   * @public
   * @class
   */
-  var SLIIOperator = function SLIIOperator(slii) {
-    this._slii_object = slii;
+  var SLI2Operator = function SLI2Operator(sli2) {
+    this._sli2_object = sli2;
     this._closed = false;
   };
 
@@ -20,8 +20,8 @@
   * @function
   * @returns {void}
   */
-  SLIIOperator.prototype.close = function close() {
-    this._slii_object = null;
+  SLI2Operator.prototype.close = function close() {
+    this._sli2_object = null;
     this._closed = true;
   };
 
@@ -34,7 +34,7 @@
   * @param {Function} error - callback on errored
   * @return {void}
   */
-  SLIIOperator.prototype.add = function add(store, data, success, error) {
+  SLI2Operator.prototype.add = function add(store, data, success, error) {
     if(this._closed) {
       throw ERROR.closed;
     }
@@ -81,7 +81,7 @@
   * @param {Function} error - callback on errored
   * @return {void}
   */
-  SLIIOperator.prototype.put = function put(store, data, success, error) {
+  SLI2Operator.prototype.put = function put(store, data, success, error) {
     if(this._closed) {
       throw ERROR.closed;
     }
@@ -128,7 +128,7 @@
   * @param {Function} error - callback on errored
   * @returns {void}
   */
-  SLIIOperator.prototype.selectAll = function selectAll(store, alias, success, error) {
+  SLI2Operator.prototype.selectAll = function selectAll(store, alias, success, error) {
     if(this._closed) {
       throw ERROR.closed;
     }
@@ -186,7 +186,7 @@
   * @param {Function} error - callback on errored
   * @returns {void}
   */
-  SLIIOperator.prototype.selectForStoresAndKeyRangesAndFilters = function selectForStoresAndKeyRangesAndFilters(
+  SLI2Operator.prototype.selectForStoresAndKeyRangesAndFilters = function selectForStoresAndKeyRangesAndFilters(
     stores, key_ranges, filters, table_name, alias, success, error
   ) {
     if(this._closed) {
@@ -261,7 +261,7 @@
   * @param {Function} error - callback on errored
   * @returns {void}
   */
-  SLIIOperator.prototype.deleteAll = function deleteAll(store, success, error) {
+  SLI2Operator.prototype.deleteAll = function deleteAll(store, success, error) {
     if(this._closed) {
       throw ERROR.closed;
     }
@@ -298,7 +298,7 @@
   * @param {Function} error - callback on errored
   * @returns {void}
   */
-  SLIIOperator.prototype.deleteForStoresAndKeyRangesAndFilters = function deleteForStoresAndKeyRangesAndFilters(
+  SLI2Operator.prototype.deleteForStoresAndKeyRangesAndFilters = function deleteForStoresAndKeyRangesAndFilters(
     stores, key_ranges, filters, success, error
   ) {
     if(this._closed) {
@@ -361,7 +361,7 @@
   * @param {Function} error - callback on errored
   * @returns {void}
   */
-  SLIIOperator.prototype.updateAll = function updateAll(store, data, success, error) {
+  SLI2Operator.prototype.updateAll = function updateAll(store, data, success, error) {
     if(this._closed) {
       throw ERROR.closed;
     }
@@ -404,7 +404,7 @@
   * @param {Function} error - callback on errored
   * @returns {void}
   */
-  SLIIOperator.prototype.updateForStoresAndKeyRangesAndFilters = function updateForStoresAndKeyRangesAndFilters(
+  SLI2Operator.prototype.updateForStoresAndKeyRangesAndFilters = function updateForStoresAndKeyRangesAndFilters(
     stores, key_ranges, filters, data, success, error
   ) {
     if(this._closed) {
@@ -465,6 +465,6 @@
   };
 
 
-  cxt.SLIIOperator = SLIIOperator;
+  cxt.SLI2Operator = SLI2Operator;
 
 })(this);

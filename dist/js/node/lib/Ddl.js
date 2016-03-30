@@ -152,11 +152,11 @@
     }
 
     var that = this,
-        slii = this._slii_object,
+        sli2 = this._sli2_object,
         _end = typeof end === "function" ? end : function() {},
         _error = typeof error === "function" ? error : function() {};
 
-    if(slii === void 0 || slii === null) {
+    if(sli2 === void 0 || sli2 === null) {
       throw ERROR.querable_is_not_initialized;
     }
 
@@ -177,27 +177,27 @@
     if(this._set_create_table) {
       _reject = _exec_reject("create_table");
 
-      if(slii.tables[this._table_name]) {
+      if(sli2.tables[this._table_name]) {
         _reject(ERROR.table_already_exist(this._table_name));
 
       } else {
-        var table = new Table(this._table_name, null, slii);
+        var table = new Table(this._table_name, null, sli2);
 
         table.create(
           this._option,
           function() {
             var handler = "";
 
-            slii.tables[that._table_name] = table;
+            sli2.tables[that._table_name] = table;
 
-            if(slii.isUpgrading()) {
-              handler = slii.constructor.DEFAULT_UPGRADING_HANDLER;
+            if(sli2.isUpgrading()) {
+              handler = sli2.constructor.DEFAULT_UPGRADING_HANDLER;
 
-            } else if(slii.isTransacting()) {
+            } else if(sli2.isTransacting()) {
               _reject(ERROR.cannot_execute("create_table in transacting"));
             }
 
-            table.open(slii.transactio, handler);
+            table.open(sli2.transactio, handler);
             _func(table, _exec_fulfill, _reject);
             if(!handler) {
               table.close(handler);
@@ -213,11 +213,11 @@
     } else if(this._set_drop_table) {
       _reject = _exec_reject("drop_table");
 
-      if(!slii.tables[this._table_name]) {
+      if(!sli2.tables[this._table_name]) {
         _reject(ERROR.table_not_exist(this._table_name));
 
       } else {
-        slii.tables[this._table_name].drop(
+        sli2.tables[this._table_name].drop(
           function() {
             _func(null, _exec_fulfill, _reject);
           },
@@ -232,11 +232,11 @@
     } else if(this._set_create_index) {
       _reject = _exec_reject("create_index");
 
-      if(!slii.tables[this._table_name]) {
+      if(!sli2.tables[this._table_name]) {
         _reject(ERROR.table_not_exist(this._table_name));
 
       } else {
-        slii.tables[this._table_name].createIndex(
+        sli2.tables[this._table_name].createIndex(
           this._index_name, this._option,
           function() {
             _func(null, _exec_fulfill, _reject);
@@ -251,11 +251,11 @@
     } else if(this._set_drop_index) {
       _reject = _exec_reject("drop_index");
 
-      if(!slii.tables[this._table_name]) {
+      if(!sli2.tables[this._table_name]) {
         _reject(ERROR.table_not_exist(this._table_name));
 
       } else {
-        slii.tables[this._table_name].dropIndex(
+        sli2.tables[this._table_name].dropIndex(
           this._index_name,
           function() {
             _func(null, _exec_fulfill, _reject);

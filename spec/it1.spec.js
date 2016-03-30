@@ -1,6 +1,6 @@
-var SLII = require("../dist/js/node/SLII.js").SLII;
+var SLI2 = require("../dist/js/node/SLI2.js").SLI2;
 
-describe('test1 - SLII.js', function() {
+describe('test1 - SLI2.js', function() {
 
   var test_data = [
     { key1: "a", key2: 10, key3: 100 },
@@ -54,11 +54,11 @@ describe('test1 - SLII.js', function() {
     return true;
   }
 
-  it("001 - SLII no_idb mode", function(done) {
+  it("001 - SLI2 no_idb mode", function(done) {
 
-    var slii = new SLII("", { mode: "no_idb" });
+    var sli2 = new SLI2("", { mode: "no_idb" });
 
-    slii.select()
+    sli2.select()
     .from(test_data)
     .run(function(rows) {
 
@@ -85,7 +85,7 @@ describe('test1 - SLII.js', function() {
     });
   });
 
-  it("002 - SLII no_idb mode join", function(done) {
+  it("002 - SLI2 no_idb mode join", function(done) {
 
     var test_join_with_alias_data = [],
         test_left_join_with_alias_data = [],
@@ -184,10 +184,10 @@ describe('test1 - SLII.js', function() {
       }
     }
 
-    var slii = new SLII("", { mode: "no_idb" });
+    var sli2 = new SLI2("", { mode: "no_idb" });
 
     new Promise(function(fulfill, reject) {
-      slii.select()
+      sli2.select()
       .from(test_data).as("data1")
       .join(test_data2, function($) {
         $.and("data1.key1").eq.key("data2.key1");
@@ -216,7 +216,7 @@ describe('test1 - SLII.js', function() {
     })
     .then(function() {
       return new Promise(function(fulfill, reject) {
-        slii.select()
+        sli2.select()
         .from(test_data).as("data1")
         .left_join(test_data2, function($) {
           $.and("data1.key1").eq.key("data2.key1");
@@ -246,7 +246,7 @@ describe('test1 - SLII.js', function() {
     })
     .then(function() {
       return new Promise(function(fulfill, reject) {
-        slii.select()
+        sli2.select()
         .from(test_data).as("data1")
         .right_join(test_data2, function($) {
           $.and("data1.key1").eq.key("data2.key1");
@@ -276,7 +276,7 @@ describe('test1 - SLII.js', function() {
     })
     .then(function() {
       return new Promise(function(fulfill, reject) {
-        slii.select()
+        sli2.select()
         .from(test_data)
         .join(test_data2, function($) {
           $.and("left.key1").eq.key("right_1.key1");
@@ -306,7 +306,7 @@ describe('test1 - SLII.js', function() {
     })
     .then(function() {
       return new Promise(function(fulfill, reject) {
-        slii.select()
+        sli2.select()
         .from(test_data)
         .left_join(test_data2, function($) {
           $.and("left.key1").eq.key("right_1.key1");
@@ -336,7 +336,7 @@ describe('test1 - SLII.js', function() {
     })
     .then(function() {
       return new Promise(function(fulfill, reject) {
-        slii.select()
+        sli2.select()
         .from(test_data)
         .right_join(test_data2, function($) {
           $.and("left.key1").eq.key("right_1.key1");
@@ -376,8 +376,8 @@ describe('test1 - SLII.js', function() {
     })
     .then(function() {
       return new Promise(function(fulfill, reject) {
-        slii.select()
-        .from(slii.select().from(test_data))
+        sli2.select()
+        .from(sli2.select().from(test_data))
         .run(function(rows) {
           fulfill();
         });
@@ -391,12 +391,12 @@ describe('test1 - SLII.js', function() {
     });
   });
 
-  it("003 - SLII no_idb select from", function(done) {
+  it("003 - SLI2 no_idb select from", function(done) {
     var test_result_data = test_data;
 
-    var slii = new SLII("", { mode: "no_idb" });
+    var sli2 = new SLI2("", { mode: "no_idb" });
 
-    slii
+    sli2
     .select()
     .from(test_data)
     .run(function(rows) {
@@ -419,7 +419,7 @@ describe('test1 - SLII.js', function() {
 
   });
 
-  it("004 - SLII no_idb select from where", function(done) {
+  it("004 - SLI2 no_idb select from where", function(done) {
     var test_result_data = [];
     for(var i = 0, l = test_data.length; i < l; i = i + 1) {
       if(test_data[i].key2 > 20) {
@@ -427,9 +427,9 @@ describe('test1 - SLII.js', function() {
       }
     }
 
-    var slii = new SLII("", { mode: "no_idb" });
+    var sli2 = new SLI2("", { mode: "no_idb" });
 
-    slii
+    sli2
     .select()
     .from(test_data)
     .where(function($) {
@@ -455,11 +455,11 @@ describe('test1 - SLII.js', function() {
 
   });
 
-  it("004_2 - SLII no_idb select from where", function(done) {
-    var slii = new SLII("", { mode: "no_idb" });
+  it("004_2 - SLI2 no_idb select from where", function(done) {
+    var sli2 = new SLI2("", { mode: "no_idb" });
 
     (function() {
-      return slii
+      return sli2
       .select()
       .from(test_data)
       .run(function(rows, ok, ng) {
@@ -473,7 +473,7 @@ describe('test1 - SLII.js', function() {
           result_rows2 = [];
 
       return new Promise(function(fulfill, reject) {
-        slii
+        sli2
         .select()
         .from(test_data)
         .where(function($) {
@@ -485,7 +485,7 @@ describe('test1 - SLII.js', function() {
           ok();
         })
         .then(function() {
-          return slii
+          return sli2
           .select()
           .from(test_data)
           .where(function($) {
@@ -521,7 +521,7 @@ describe('test1 - SLII.js', function() {
       });
     })
     .then(function() {
-      return slii
+      return sli2
       .select()
       .from(test_data).as("test_data")
       .run(function(rows, ok, ng) {
@@ -536,7 +536,7 @@ describe('test1 - SLII.js', function() {
           result_rows3 = [];
 
       return new Promise(function(fulfill, reject) {
-        slii
+        sli2
         .select()
         .from(test_data).as("test_data")
         .where(function($) {
@@ -548,7 +548,7 @@ describe('test1 - SLII.js', function() {
           ok();
         })
         .then(function() {
-          return slii
+          return sli2
           .select()
           .from(test_data).as("test_data")
           .where(function($) {
@@ -561,7 +561,7 @@ describe('test1 - SLII.js', function() {
           });
         })
         .then(function() {
-          return slii
+          return sli2
           .select()
           .from(test_data).as("test_data")
           .where(function($) {
@@ -601,11 +601,11 @@ describe('test1 - SLII.js', function() {
     });
   });
 
-  it("004_10 - SLII no_idb select from join where", function(done) {
-    var slii = new SLII("", { mode: "no_idb" });
+  it("004_10 - SLI2 no_idb select from join where", function(done) {
+    var sli2 = new SLI2("", { mode: "no_idb" });
 
     (function() {
-      return slii
+      return sli2
       .select()
       .from(test_data)
       .join(test_data2)
@@ -620,7 +620,7 @@ describe('test1 - SLII.js', function() {
           result_rows2 = [];
 
       return new Promise(function(fulfill, reject) {
-        slii
+        sli2
         .select()
         .from(test_data)
         .join(test_data2, function($) {
@@ -632,7 +632,7 @@ describe('test1 - SLII.js', function() {
           ok();
         })
         .then(function() {
-          return slii
+          return sli2
           .select()
           .from(test_data)
           .join(test_data2)
@@ -673,7 +673,7 @@ describe('test1 - SLII.js', function() {
           result_rows2 = [];
 
       return new Promise(function(fulfill, reject) {
-        slii
+        sli2
         .select()
         .from(test_data)
         .join(test_data2, function($) {
@@ -686,7 +686,7 @@ describe('test1 - SLII.js', function() {
           ok();
         })
         .then(function() {
-          return slii
+          return sli2
           .select()
           .from(test_data)
           .join(test_data2)
@@ -728,7 +728,7 @@ describe('test1 - SLII.js', function() {
           result_rows2 = [];
 
       return new Promise(function(fulfill, reject) {
-        slii
+        sli2
         .select()
         .from(test_data)
         .join(test_data2, function($) {
@@ -741,7 +741,7 @@ describe('test1 - SLII.js', function() {
           ok();
         })
         .then(function() {
-          return slii
+          return sli2
           .select()
           .from(test_data)
           .join(test_data2)
@@ -783,7 +783,7 @@ describe('test1 - SLII.js', function() {
           result_rows2 = [];
 
       return new Promise(function(fulfill, reject) {
-        slii
+        sli2
         .select()
         .from(test_data)
         .join(test_data2, function($) {
@@ -796,7 +796,7 @@ describe('test1 - SLII.js', function() {
           ok();
         })
         .then(function() {
-          return slii
+          return sli2
           .select()
           .from(test_data)
           .join(test_data2)
@@ -831,7 +831,7 @@ describe('test1 - SLII.js', function() {
           result_rows2 = [];
 
       return new Promise(function(fulfill, reject) {
-        slii
+        sli2
         .select()
         .from(test_data)
         .join(test_data2, function($) {
@@ -843,7 +843,7 @@ describe('test1 - SLII.js', function() {
           ok();
         })
         .then(function() {
-          return slii
+          return sli2
           .select()
           .from(test_data)
           .join(test_data2).as("test_data2")
@@ -885,7 +885,7 @@ describe('test1 - SLII.js', function() {
           result_rows2 = [];
 
       return new Promise(function(fulfill, reject) {
-        slii
+        sli2
         .select()
         .from(test_data)
         .join(test_data2, function($) {
@@ -898,7 +898,7 @@ describe('test1 - SLII.js', function() {
           ok();
         })
         .then(function() {
-          return slii
+          return sli2
           .select()
           .from(test_data)
           .join(test_data2).as("test_data2")
@@ -940,7 +940,7 @@ describe('test1 - SLII.js', function() {
           result_rows2 = [];
 
       return new Promise(function(fulfill, reject) {
-        slii
+        sli2
         .select()
         .from(test_data)
         .join(test_data2, function($) {
@@ -953,7 +953,7 @@ describe('test1 - SLII.js', function() {
           ok();
         })
         .then(function() {
-          return slii
+          return sli2
           .select()
           .from(test_data)
           .join(test_data2).as("test_data2")
@@ -995,7 +995,7 @@ describe('test1 - SLII.js', function() {
           result_rows2 = [];
 
       return new Promise(function(fulfill, reject) {
-        slii
+        sli2
         .select()
         .from(test_data)
         .join(test_data2, function($) {
@@ -1008,7 +1008,7 @@ describe('test1 - SLII.js', function() {
           ok();
         })
         .then(function() {
-          return slii
+          return sli2
           .select()
           .from(test_data)
           .join(test_data2).as("test_data2")
@@ -1044,11 +1044,11 @@ describe('test1 - SLII.js', function() {
 
   });
 
-  it("004_11 - SLII no_idb select from left_join where", function(done) {
-    var slii = new SLII("", { mode: "no_idb" });
+  it("004_11 - SLI2 no_idb select from left_join where", function(done) {
+    var sli2 = new SLI2("", { mode: "no_idb" });
 
     (function() {
-      return slii
+      return sli2
         .select()
         .from(test_data)
         .left_join(test_data2)
@@ -1063,7 +1063,7 @@ describe('test1 - SLII.js', function() {
           result_rows2 = [];
 
       return new Promise(function(fulfill, reject) {
-        slii
+        sli2
         .select()
         .from(test_data)
         .left_join(test_data2, function($) {
@@ -1075,7 +1075,7 @@ describe('test1 - SLII.js', function() {
           ok();
         })
         .then(function() {
-          return slii
+          return sli2
           .select()
           .from(test_data)
           .left_join(test_data2)
@@ -1116,7 +1116,7 @@ describe('test1 - SLII.js', function() {
           result_rows2 = [];
 
       return new Promise(function(fulfill, reject) {
-        slii
+        sli2
         .select()
         .from(test_data)
         .left_join(test_data2, function($) {
@@ -1129,7 +1129,7 @@ describe('test1 - SLII.js', function() {
           ok();
         })
         .then(function() {
-          return slii
+          return sli2
           .select()
           .from(test_data)
           .left_join(test_data2)
@@ -1182,7 +1182,7 @@ describe('test1 - SLII.js', function() {
           result_rows2 = [];
 
       return new Promise(function(fulfill, reject) {
-        slii
+        sli2
         .select()
         .from(test_data)
         .left_join(test_data2, function($) {
@@ -1195,7 +1195,7 @@ describe('test1 - SLII.js', function() {
           ok();
         })
         .then(function() {
-          return slii
+          return sli2
           .select()
           .from(test_data)
           .left_join(test_data2)
@@ -1248,7 +1248,7 @@ describe('test1 - SLII.js', function() {
           result_rows2 = [];
 
       return new Promise(function(fulfill, reject) {
-        slii
+        sli2
         .select()
         .from(test_data)
         .left_join(test_data2, function($) {
@@ -1261,7 +1261,7 @@ describe('test1 - SLII.js', function() {
           ok();
         })
         .then(function() {
-          return slii
+          return sli2
           .select()
           .from(test_data)
           .left_join(test_data2)
@@ -1296,7 +1296,7 @@ describe('test1 - SLII.js', function() {
           result_rows2 = [];
 
       return new Promise(function(fulfill, reject) {
-        slii
+        sli2
         .select()
         .from(test_data)
         .left_join(test_data2, function($) {
@@ -1308,7 +1308,7 @@ describe('test1 - SLII.js', function() {
           ok();
         })
         .then(function() {
-          return slii
+          return sli2
           .select()
           .from(test_data)
           .left_join(test_data2).as("test_data2")
@@ -1349,7 +1349,7 @@ describe('test1 - SLII.js', function() {
           result_rows2 = [];
 
       return new Promise(function(fulfill, reject) {
-        slii
+        sli2
         .select()
         .from(test_data)
         .left_join(test_data2, function($) {
@@ -1362,7 +1362,7 @@ describe('test1 - SLII.js', function() {
           ok();
         })
         .then(function() {
-          return slii
+          return sli2
           .select()
           .from(test_data)
           .left_join(test_data2).as("test_data2")
@@ -1415,7 +1415,7 @@ describe('test1 - SLII.js', function() {
           result_rows2 = [];
 
       return new Promise(function(fulfill, reject) {
-        slii
+        sli2
         .select()
         .from(test_data)
         .left_join(test_data2, function($) {
@@ -1428,7 +1428,7 @@ describe('test1 - SLII.js', function() {
           ok();
         })
         .then(function() {
-          return slii
+          return sli2
           .select()
           .from(test_data)
           .left_join(test_data2).as("test_data2")
@@ -1481,7 +1481,7 @@ describe('test1 - SLII.js', function() {
           result_rows2 = [];
 
       return new Promise(function(fulfill, reject) {
-        slii
+        sli2
         .select()
         .from(test_data)
         .left_join(test_data2, function($) {
@@ -1494,7 +1494,7 @@ describe('test1 - SLII.js', function() {
           ok();
         })
         .then(function() {
-          return slii
+          return sli2
           .select()
           .from(test_data)
           .left_join(test_data2).as("test_data2")
@@ -1530,11 +1530,11 @@ describe('test1 - SLII.js', function() {
 
   });
 
-  it("004_12 - SLII no_idb select from right_join where", function(done) {
-    var slii = new SLII("", { mode: "no_idb" });
+  it("004_12 - SLI2 no_idb select from right_join where", function(done) {
+    var sli2 = new SLI2("", { mode: "no_idb" });
 
     (function() {
-      return slii
+      return sli2
       .select()
       .from(test_data)
       .right_join(test_data2)
@@ -1549,7 +1549,7 @@ describe('test1 - SLII.js', function() {
           result_rows2 = [];
 
       return new Promise(function(fulfill, reject) {
-        slii
+        sli2
         .select()
         .from(test_data)
         .right_join(test_data2, function($) {
@@ -1561,7 +1561,7 @@ describe('test1 - SLII.js', function() {
           ok();
         })
         .then(function() {
-          return slii
+          return sli2
           .select()
           .from(test_data)
           .right_join(test_data2)
@@ -1613,7 +1613,7 @@ describe('test1 - SLII.js', function() {
           result_rows2 = [];
 
       return new Promise(function(fulfill, reject) {
-        slii
+        sli2
         .select()
         .from(test_data)
         .right_join(test_data2, function($) {
@@ -1626,7 +1626,7 @@ describe('test1 - SLII.js', function() {
           ok();
         })
         .then(function() {
-          return slii
+          return sli2
           .select()
           .from(test_data)
           .right_join(test_data2)
@@ -1679,7 +1679,7 @@ describe('test1 - SLII.js', function() {
           result_rows2 = [];
 
       return new Promise(function(fulfill, reject) {
-        slii
+        sli2
         .select()
         .from(test_data)
         .right_join(test_data2, function($) {
@@ -1692,7 +1692,7 @@ describe('test1 - SLII.js', function() {
           ok();
         })
         .then(function() {
-          return slii
+          return sli2
           .select()
           .from(test_data)
           .right_join(test_data2)
@@ -1745,7 +1745,7 @@ describe('test1 - SLII.js', function() {
           result_rows2 = [];
 
       return new Promise(function(fulfill, reject) {
-        slii
+        sli2
         .select()
         .from(test_data)
         .right_join(test_data2, function($) {
@@ -1758,7 +1758,7 @@ describe('test1 - SLII.js', function() {
           ok();
         })
         .then(function() {
-          return slii
+          return sli2
           .select()
           .from(test_data)
           .right_join(test_data2)
@@ -1797,7 +1797,7 @@ describe('test1 - SLII.js', function() {
           result_rows2 = [];
 
       return new Promise(function(fulfill, reject) {
-        slii
+        sli2
         .select()
         .from(test_data)
         .right_join(test_data2, function($) {
@@ -1809,7 +1809,7 @@ describe('test1 - SLII.js', function() {
           ok();
         })
         .then(function() {
-          return slii
+          return sli2
           .select()
           .from(test_data)
           .right_join(test_data2).as("test_data2")
@@ -1861,7 +1861,7 @@ describe('test1 - SLII.js', function() {
           result_rows2 = [];
 
       return new Promise(function(fulfill, reject) {
-        slii
+        sli2
         .select()
         .from(test_data)
         .right_join(test_data2, function($) {
@@ -1874,7 +1874,7 @@ describe('test1 - SLII.js', function() {
           ok();
         })
         .then(function() {
-          return slii
+          return sli2
           .select()
           .from(test_data)
           .right_join(test_data2).as("test_data2")
@@ -1927,7 +1927,7 @@ describe('test1 - SLII.js', function() {
           result_rows2 = [];
 
       return new Promise(function(fulfill, reject) {
-        slii
+        sli2
         .select()
         .from(test_data)
         .right_join(test_data2, function($) {
@@ -1940,7 +1940,7 @@ describe('test1 - SLII.js', function() {
           ok();
         })
         .then(function() {
-          return slii
+          return sli2
           .select()
           .from(test_data)
           .right_join(test_data2).as("test_data2")
@@ -1993,7 +1993,7 @@ describe('test1 - SLII.js', function() {
           result_rows2 = [];
 
       return new Promise(function(fulfill, reject) {
-        slii
+        sli2
         .select()
         .from(test_data)
         .right_join(test_data2, function($) {
@@ -2006,7 +2006,7 @@ describe('test1 - SLII.js', function() {
           ok();
         })
         .then(function() {
-          return slii
+          return sli2
           .select()
           .from(test_data)
           .right_join(test_data2).as("test_data2")
@@ -2042,11 +2042,11 @@ describe('test1 - SLII.js', function() {
 
   });
 
-  it("004_13 - SLII no_idb select from where (no_alias)", function(done) {
-    var slii = new SLII("", { mode: "no_idb" });
+  it("004_13 - SLI2 no_idb select from where (no_alias)", function(done) {
+    var sli2 = new SLI2("", { mode: "no_idb" });
 
     (function() {
-      return slii
+      return sli2
       .select(function($, _) {
         $(_.key1);
         $(_.key2 + 1000).as("calc");
@@ -2075,7 +2075,7 @@ describe('test1 - SLII.js', function() {
       })
     }())
     .then(function() {
-      return slii
+      return sli2
       .select(function($, _) {
         $(_.test_data1.key1);
         $(_.test_data1.key2 + _.test_data2.key2).as("sum");
@@ -2110,8 +2110,8 @@ describe('test1 - SLII.js', function() {
     });
   });
 
-  it("004_20 - SLII no_idb select from join join where", function(done) {
-    var slii = new SLII("", { mode: "no_idb" });
+  it("004_20 - SLI2 no_idb select from join join where", function(done) {
+    var sli2 = new SLI2("", { mode: "no_idb" });
 
     (function() {
       var result_rows1 = [],
@@ -2119,7 +2119,7 @@ describe('test1 - SLII.js', function() {
           result_rows3 = [];
 
       return new Promise(function(fulfill, reject) {
-        slii
+        sli2
         .select()
         .from(test_data)
         .join(test_data2, function($) {
@@ -2136,7 +2136,7 @@ describe('test1 - SLII.js', function() {
           ok();
         })
         .then(function() {
-          return slii
+          return sli2
           .select()
           .from(test_data)
           .join(test_data2, function($) {
@@ -2156,7 +2156,7 @@ describe('test1 - SLII.js', function() {
           });
         })
         .then(function() {
-          return slii
+          return sli2
           .select()
           .from(test_data)
           .join(test_data2)
@@ -2203,7 +2203,7 @@ describe('test1 - SLII.js', function() {
           result_rows3 = [];
 
       return new Promise(function(fulfill, reject) {
-        slii
+        sli2
         .select()
         .from(test_data)
         .join(test_data2, function($) {
@@ -2220,7 +2220,7 @@ describe('test1 - SLII.js', function() {
           ok();
         })
         .then(function() {
-          return slii
+          return sli2
           .select()
           .from(test_data)
           .join(test_data2, function($) {
@@ -2240,7 +2240,7 @@ describe('test1 - SLII.js', function() {
           });
         })
         .then(function() {
-          return slii
+          return sli2
           .select()
           .from(test_data)
           .join(test_data2).as("test_data2")
@@ -2285,7 +2285,7 @@ describe('test1 - SLII.js', function() {
     });
   });
 
-  it("005 - SLII no_idb select from group_by", function(done) {
+  it("005 - SLI2 no_idb select from group_by", function(done) {
     var test_result_data = [];
     for(var i = 0, l = test_data.length; i < l; i = i + 1) {
       var match = false;
@@ -2303,9 +2303,9 @@ describe('test1 - SLII.js', function() {
       }
     }
 
-    var slii = new SLII("", { mode: "no_idb" });
+    var sli2 = new SLI2("", { mode: "no_idb" });
 
-    slii
+    sli2
     .select()
     .from(test_data)
     .group_by("key1")
@@ -2329,7 +2329,7 @@ describe('test1 - SLII.js', function() {
 
   });
 
-  it("006 - SLII no_idb seleft from group_by having", function(done) {
+  it("006 - SLI2 no_idb seleft from group_by having", function(done) {
     var tmp = [],
         test_result_data = [];
     for(var i = 0, l = test_data.length; i < l; i = i + 1) {
@@ -2353,9 +2353,9 @@ describe('test1 - SLII.js', function() {
       }
     }
 
-    var slii = new SLII("", { mode: "no_idb" });
+    var sli2 = new SLI2("", { mode: "no_idb" });
 
-    slii
+    sli2
     .select()
     .from(test_data)
     .group_by("key1")
@@ -2382,13 +2382,13 @@ describe('test1 - SLII.js', function() {
 
   });
 
-  it("007 - SLII no_idb select from order_by", function(done) {
+  it("007 - SLI2 no_idb select from order_by", function(done) {
     var test_result_data = [];
     test_result_data = test_data.sort(function(a, b) { return a.key2 > b.key2; })
 
-    var slii = new SLII("", { mode: "no_idb" });
+    var sli2 = new SLI2("", { mode: "no_idb" });
 
-    slii
+    sli2
     .select()
     .from(test_data)
     .order_by("key2")
@@ -2412,7 +2412,7 @@ describe('test1 - SLII.js', function() {
 
   });
 
-  it("008 - SLII no_idb select from group_by having order_by", function(done) {
+  it("008 - SLI2 no_idb select from group_by having order_by", function(done) {
     var tmp = [],
         test_result_data = [];
     for(var i = 0, l = test_data.length; i < l; i = i + 1) {
@@ -2437,9 +2437,9 @@ describe('test1 - SLII.js', function() {
     }
     test_result_data = test_result_data.sort(function(a, b) { return a.key3 < b.key3; });
 
-    var slii = new SLII("", { mode: "no_idb" });
+    var sli2 = new SLI2("", { mode: "no_idb" });
 
-    slii
+    sli2
     .select()
     .from(test_data)
     .group_by("key1")
@@ -2467,15 +2467,15 @@ describe('test1 - SLII.js', function() {
 
   });
 
-  it("009 - SLII no_idb seleft from limit", function(done) {
+  it("009 - SLI2 no_idb seleft from limit", function(done) {
     var test_result_data = [];
     for(var i = 0, l = 5; i < l; i = i + 1) {
       test_result_data[test_result_data.length] = test_data[i];
     }
 
-    var slii = new SLII("", { mode: "no_idb" });
+    var sli2 = new SLI2("", { mode: "no_idb" });
 
-    slii
+    sli2
     .select()
     .from(test_data)
     .limit(5)
@@ -2499,15 +2499,15 @@ describe('test1 - SLII.js', function() {
 
   });
 
-  it("010 - SLII no_idb select from limit offset (1)", function(done) {
+  it("010 - SLI2 no_idb select from limit offset (1)", function(done) {
     var test_result_data = [];
     for(var i = 2, l = 7; i < l; i = i + 1) {
       test_result_data[test_result_data.length] = test_data[i];
     }
 
-    var slii = new SLII("", { mode: "no_idb" });
+    var sli2 = new SLI2("", { mode: "no_idb" });
 
-    slii
+    sli2
     .select()
     .from(test_data)
     .limit(2, 5)
@@ -2531,15 +2531,15 @@ describe('test1 - SLII.js', function() {
 
   });
 
-  it("011 - SLII no_idb select from limit offset (2)", function(done) {
+  it("011 - SLI2 no_idb select from limit offset (2)", function(done) {
     var test_result_data = [];
     for(var i = 1, l = 6; i < l; i = i + 1) {
       test_result_data[test_result_data.length] = test_data[i];
     }
 
-    var slii = new SLII("", { mode: "no_idb" });
+    var sli2 = new SLI2("", { mode: "no_idb" });
 
-    slii
+    sli2
     .select()
     .from(test_data)
     .limit(5)
@@ -2564,7 +2564,7 @@ describe('test1 - SLII.js', function() {
 
   });
 
-  it("012 - SLII no_idb select from union select from", function(done) {
+  it("012 - SLI2 no_idb select from union select from", function(done) {
     var test_union_data = [];
     for(var i = 0, l = test_data.length; i < l; i = i + 1) {
       test_union_data[test_union_data.length] = test_data[i];
@@ -2583,9 +2583,9 @@ describe('test1 - SLII.js', function() {
     test_union_result_data[test_union_result_data.length] = { key1: "x", key2: 1000, key3: 200 };
     test_union_result_data[test_union_result_data.length] = { key1: "y", key2: 1100, key3: 210 };
 
-    var slii = new SLII("", { mode: "no_idb" });
+    var sli2 = new SLI2("", { mode: "no_idb" });
 
-    slii
+    sli2
     .select()
     .from(test_data)
     .union()
@@ -2611,7 +2611,7 @@ describe('test1 - SLII.js', function() {
 
   });
 
-  it("013 - SLII no_idb select from union_all select from", function(done) {
+  it("013 - SLI2 no_idb select from union_all select from", function(done) {
     var test_union_all_data = [];
     for(var i = 0, l = test_data.length; i < l; i = i + 1) {
       test_union_all_data[test_union_all_data.length] = test_data[i];
@@ -2620,9 +2620,9 @@ describe('test1 - SLII.js', function() {
       test_union_all_data[test_union_all_data.length] = test_data[i];
     }
 
-    var slii = new SLII("", { mode: "no_idb" });
+    var sli2 = new SLI2("", { mode: "no_idb" });
 
-    slii
+    sli2
       .select()
       .from(test_data)
       .union_all()
@@ -2648,10 +2648,10 @@ describe('test1 - SLII.js', function() {
 
   });
 
-  it("100 - SLII no_idb deleteDatabase", function(done) {
-    var slii = new SLII("", { mode: "no_idb" });
+  it("100 - SLI2 no_idb deleteDatabase", function(done) {
+    var sli2 = new SLI2("", { mode: "no_idb" });
 
-    slii.deleteDatabase("test")
+    sli2.deleteDatabase("test")
     .then(function() {
       expect(1).toEqual(0);
       done();
@@ -2664,10 +2664,10 @@ describe('test1 - SLII.js', function() {
 
   });
 
-  it("101 - SLII no_idb open", function(done) {
-    var slii = new SLII("", { mode: "no_idb" });
+  it("101 - SLI2 no_idb open", function(done) {
+    var sli2 = new SLI2("", { mode: "no_idb" });
 
-    slii.open()
+    sli2.open()
     .then(function() {
       expect(1).toEqual(0);
       done();
@@ -2680,11 +2680,11 @@ describe('test1 - SLII.js', function() {
 
   });
 
-  it("102 - SLII no_idb getNewVersion", function(done) {
-    var slii = new SLII("", { mode: "no_idb" });
+  it("102 - SLI2 no_idb getNewVersion", function(done) {
+    var sli2 = new SLI2("", { mode: "no_idb" });
 
     try {
-      slii.getNewVersion();
+      sli2.getNewVersion();
 
       expect(1).toEqual(0);
       done();
@@ -2697,11 +2697,11 @@ describe('test1 - SLII.js', function() {
 
   });
 
-  it("103 - SLII no_idb createTable", function(done) {
-    var slii = new SLII("", { mode: "no_idb" });
+  it("103 - SLI2 no_idb createTable", function(done) {
+    var sli2 = new SLI2("", { mode: "no_idb" });
 
     try {
-      slii.createTable("table1")
+      sli2.createTable("table1")
       .run();
 
       expect(1).toEqual(0);
@@ -2715,11 +2715,11 @@ describe('test1 - SLII.js', function() {
 
   });
 
-  it("104 - SLII no_idb dropTable", function(done) {
-    var slii = new SLII("", { mode: "no_idb" });
+  it("104 - SLI2 no_idb dropTable", function(done) {
+    var sli2 = new SLI2("", { mode: "no_idb" });
 
     try {
-      slii.dropTable("table1")
+      sli2.dropTable("table1")
       .run();
 
       expect(1).toEqual(0);
@@ -2733,11 +2733,11 @@ describe('test1 - SLII.js', function() {
 
   });
 
-  it("105 - SLII no_idb createIndex", function(done) {
-    var slii = new SLII("", { mode: "no_idb" });
+  it("105 - SLI2 no_idb createIndex", function(done) {
+    var sli2 = new SLI2("", { mode: "no_idb" });
 
     try {
-      slii.createIndex("table1", "idx1", {})
+      sli2.createIndex("table1", "idx1", {})
       .run();
 
       expect(1).toEqual(0);
@@ -2751,11 +2751,11 @@ describe('test1 - SLII.js', function() {
 
   });
 
-  it("106 - SLII no_idb dropIndex", function(done) {
-    var slii = new SLII("", { mode: "no_idb" });
+  it("106 - SLI2 no_idb dropIndex", function(done) {
+    var sli2 = new SLI2("", { mode: "no_idb" });
 
     try {
-      slii.dropIndex("table1", "idx1")
+      sli2.dropIndex("table1", "idx1")
       .run();
 
       expect(1).toEqual(0);
@@ -2769,10 +2769,10 @@ describe('test1 - SLII.js', function() {
 
   });
 
-  it("107 - SLII no_idb beginTransaction", function(done) {
-    var slii = new SLII("", { mode: "no_idb" });
+  it("107 - SLI2 no_idb beginTransaction", function(done) {
+    var sli2 = new SLI2("", { mode: "no_idb" });
 
-    slii.beginTransaction("table1", "readwrite", function() {
+    sli2.beginTransaction("table1", "readwrite", function() {
       console.log("start transaction");
     })
     .then(function() {
@@ -2787,10 +2787,10 @@ describe('test1 - SLII.js', function() {
 
   });
 
-  it("108 - SLII no_idb upgrade", function(done) {
-    var slii = new SLII("", { mode: "no_idb" });
+  it("108 - SLI2 no_idb upgrade", function(done) {
+    var sli2 = new SLI2("", { mode: "no_idb" });
 
-    slii.upgrade(function(db, tra) {
+    sli2.upgrade(function(db, tra) {
       console.log("start upgrading");
     })
     .then(function() {
@@ -2805,11 +2805,11 @@ describe('test1 - SLII.js', function() {
 
   });
 
-  it("109 - SLII no_idb insert_into", function(done) {
-    var slii = new SLII("", { mode: "no_idb" });
+  it("109 - SLI2 no_idb insert_into", function(done) {
+    var sli2 = new SLI2("", { mode: "no_idb" });
 
     try {
-      slii.insert_into("table1");
+      sli2.insert_into("table1");
 
       expect(1).toEqual(0);
       done();
@@ -2821,11 +2821,11 @@ describe('test1 - SLII.js', function() {
     }
   });
 
-  it("110 - SLII no_idb delete_from", function(done) {
-    var slii = new SLII("", { mode: "no_idb" });
+  it("110 - SLI2 no_idb delete_from", function(done) {
+    var sli2 = new SLI2("", { mode: "no_idb" });
 
     try {
-      slii.delete_from("table1");
+      sli2.delete_from("table1");
 
       expect(1).toEqual(0);
       done();
@@ -2837,11 +2837,11 @@ describe('test1 - SLII.js', function() {
     }
   });
 
-  it("111 - SLII no_idb update", function(done) {
-    var slii = new SLII("", { mode: "no_idb" });
+  it("111 - SLI2 no_idb update", function(done) {
+    var sli2 = new SLI2("", { mode: "no_idb" });
 
     try {
-      slii.update("table1");
+      sli2.update("table1");
 
       expect(1).toEqual(0);
       done();
@@ -2852,11 +2852,11 @@ describe('test1 - SLII.js', function() {
     }
   });
 
-  it("112 - SLII no_idb rollback", function(done) {
-    var slii = new SLII("", { mode: "no_idb" });
+  it("112 - SLI2 no_idb rollback", function(done) {
+    var sli2 = new SLI2("", { mode: "no_idb" });
 
     try {
-      slii.rollback();
+      sli2.rollback();
 
       expect(1).toEqual(0);
       done();

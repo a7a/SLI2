@@ -10,8 +10,8 @@
   * @public
   * @class
   */
-  var Querable = function Querable(slii) {
-    this._slii_object = slii;
+  var Querable = function Querable(sli2) {
+    this._sli2_object = sli2;
   };
 
   /**
@@ -35,14 +35,14 @@
     }
 
     var that = this,
-        slii = this._slii_object;
+        sli2 = this._sli2_object;
 
-    if(slii === void 0 || slii === null) {
+    if(sli2 === void 0 || sli2 === null) {
       throw ERROR.querable_is_not_initialized;
     }
 
     return new Promise(function(fulfill/*, reject*/) {
-      slii.addTask(that, function(idb_result, exec_fulfill, exec_reject) {
+      sli2.addTask(that, function(idb_result, exec_fulfill, exec_reject) {
         if(typeof func === "function") {
           func(
             idb_result,

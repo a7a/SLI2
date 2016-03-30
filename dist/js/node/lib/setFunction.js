@@ -4,7 +4,7 @@
   "use strict";
 
   var setFunction = {
-    // for SLIIOperator
+    // for SLI2Operator
     setWithTableNameAndAlias: function setWithTableNameAndAlias(_data, _out, _filter, _table_name, _alias) {
       var data_with_table_name = {};
       data_with_table_name[_table_name] = _data;

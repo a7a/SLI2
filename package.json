@@ -1,11 +1,11 @@
 {
-  "name": "SLII",
+  "name": "SLI2",
   "version": "0.1.0",
   "description": "Sql Like Interface for IndexedDB (and JSON)",
-  "main": "dist/js/browser/SLII.js",
+  "main": "dist/js/browser/SLI2.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/a7a/SLII"
+    "url": "https://github.com/a7a/SLI2"
   },
   "keyword": [
     "SQL",
@@ -17,9 +17,9 @@
   },
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/a7a/SLII/issues"
+    "url": "https://github.com/a7a/SLI2/issues"
   },
-  "homepage": "https://github.com/a7a/SLII#readme",
+  "homepage": "https://github.com/a7a/SLI2#readme",
   "dependencies": {
     "async": "^1.5.2",
     "clone": "^1.0.2",

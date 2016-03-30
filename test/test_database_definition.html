@@ -3,17 +3,17 @@
     <div id="result"></div>
 
     <script src="./testutil.js"></script>
-    <script src="../dist/js/browser/SLII.js"></script>
+    <script src="../dist/js/browser/SLI2.js"></script>
 
     <script>
 
       // #########################
       //  test 1
       // #########################
-      var slii = null,
-          dd = SLII.createDatabaseDefinition(),
+      var sli2 = null,
+          dd = SLI2.createDatabaseDefinition(),
           def_stack = [];
-      dd.setVersion(2, function(slii) {
+      dd.setVersion(2, function(sli2) {
         console.log("upgrade version 2");
         def_stack.push(2);
       });
@@ -90,11 +90,11 @@
       .then(function() {
         return test("test 1-4-1", function(done) {
           def_stack = [];
-          slii = new SLII("test");
+          sli2 = new SLI2("test");
 
-          slii.deleteDatabase()
+          sli2.deleteDatabase()
           .then(function() {
-            return slii.open(dd);
+            return sli2.open(dd);
           })
           .then(function() {
             var result = match_array(def_stack, [2]);
@@ -108,7 +108,7 @@
           });
         })
         .then(function() {
-          return slii.close();
+          return sli2.close();
         });
       })
 
@@ -117,7 +117,7 @@
       // #########################
       .then(function() {
         return new Promise(function(fulfill) {
-          dd.setVersion(4, function(slii) {
+          dd.setVersion(4, function(sli2) {
             console.log("upgrade version 4");
             def_stack.push(4);
           });
@@ -200,9 +200,9 @@
       .then(function() {
         return test("test 2-4-1", function(done) {
           def_stack = [];
-          slii = new SLII("test");
+          sli2 = new SLI2("test");
 
-          slii.open(dd)
+          sli2.open(dd)
           .then(function() {
             var result = match_array(def_stack, [4]);
 
@@ -215,22 +215,22 @@
           });
         })
         .then(function() {
-          return slii.close();
+          return sli2.close();
         });
       })
       .then(function() {
         return test("test 2-4-2", function(done) {
           def_stack = [];
-          var slii = new SLII("test");
+          var sli2 = new SLI2("test");
 
-          slii.deleteDatabase()
+          sli2.deleteDatabase()
           .then(function() {
-            return slii.open(dd);
+            return sli2.open(dd);
           })
           .then(function() {
             var result = match_array(def_stack, [2, 4]);
 
-            slii.close()
+            sli2.close()
             .then(function() {
               done(result);
             });
@@ -238,7 +238,7 @@
           .catch(function(e) {
             console.log(e);
 
-            slii.close()
+            sli2.close()
             .then(function() {
               done(false);
             });
@@ -251,11 +251,11 @@
       // #########################
       .then(function() {
         return new Promise(function(fulfill) {
-          dd.setVersion(6, function(slii) {
+          dd.setVersion(6, function(sli2) {
             console.log("upgrade version 6");
             def_stack.push(6);
           });
-          dd.setVersion(3, function(slii) {
+          dd.setVersion(3, function(sli2) {
             console.log("upgrade version 3");
             def_stack.push(3);
           });
@@ -441,31 +441,31 @@
       .then(function() {
         return test("test 3-4-1", function(done) {
           def_stack = [];
-          var slii = new SLII("test");
+          var sli2 = new SLI2("test");
 
-          slii.deleteDatabase()
+          sli2.deleteDatabase()
           .then(function() {
-            return slii.open(dd);
+            return sli2.open(dd);
           })
           .then(function() {
             console.log("error");
             console.log("opening db must be failed");
 
-            slii.close()
+            sli2.close()
             .then(function() {
               done(false);
             });
           })
           .catch(function(e) {
-            if(e.message === "SLII has no version-map (1)") {
-              slii.close()
+            if(e.message === "SLI2 has no version-map (1)") {
+              sli2.close()
               .then(function() {
                 done(true);
               });
 
             } else {
               console.log("error: " + e.message);
-              slii.close()
+              sli2.close()
               .then(function() {
                 done(false);
               });
@@ -476,8 +476,8 @@
       .then(function() {
         return test("test 3-4-2", function(done) {
           def_stack = [];
-          var slii = new SLII("test");
-          dd.setVersion(1, function(slii) {
+          var sli2 = new SLI2("test");
+          dd.setVersion(1, function(sli2) {
             console.log("upgrade version 1");
             def_stack.push(1);
           });
@@ -485,20 +485,20 @@
             [1,2,4], [3,6]
           );
 
-          slii.deleteDatabase()
+          sli2.deleteDatabase()
           .then(function() {
-            return slii.open(dd);
+            return sli2.open(dd);
           })
           .then(function() {
             var result = match_array(def_stack, [1,2,4]);
 
-            slii.close()
+            sli2.close()
             .then(function() {
               done(result);
             });
           })
           .catch(function(e) {
-            slii.close()
+            sli2.close()
             .then(function() {
               done(false);
             });
@@ -508,23 +508,23 @@
       .then(function() {
         return test("test 3-4-3", function(done) {
           def_stack = [];
-          var slii = new SLII("test");
+          var sli2 = new SLI2("test");
           dd.defineVersionMap(
             [2,4], [1,3,6]
           );
 
-          slii.deleteDatabase();
-          slii.open(dd)
+          sli2.deleteDatabase();
+          sli2.open(dd)
           .then(function() {
             var result = match_array(def_stack, [1,3,6]);
 
-            slii.close();
+            sli2.close();
 
             done(result);
           })
           .catch(function(e) {
             console.log(e);
-            slii.close();
+            sli2.close();
 
             done(false);
           });
@@ -535,29 +535,29 @@
       //  test 5
       // #########################
       .then(function() {
-        dd = SLII.createDatabaseDefinition();
+        dd = SLI2.createDatabaseDefinition();
         dd.defineVersionMap([1,5]);
-        dd.setVersion(1, function(slii) {
-          slii.addTask(null, function(done) {
+        dd.setVersion(1, function(sli2) {
+          sli2.addTask(null, function(done) {
             console.log("*** upgrade 1 start ***");
             done();
           });
 
-          slii.createTable("tableX")
+          sli2.createTable("tableX")
           .run(function(res, fulfill, reject) {
             console.log("create table X ok");
             fulfill();
           })
           .catch(function(err) { console.log("create table X ng"); console.log(err); });
 
-          slii.createTable("tableY")
+          sli2.createTable("tableY")
           .run(function(res, fulfill, reject) {
             console.log("create table Y ok");
             fulfill();
           })
           .catch(function(err) { console.log("create table X ng"); console.log(err); });
 
-          slii.insert_into("tableX", ["key1", "key2", "key3"]).values("a", 100, 200)
+          sli2.insert_into("tableX", ["key1", "key2", "key3"]).values("a", 100, 200)
           .run(function(ret, fulfill, reject) {
             console.log("insert 1 ok");
             fulfill();
@@ -565,44 +565,44 @@
           .then(function() { console.log("insert end"); })
           .catch(function(err) { console.log("insert error"); console.log(err); });
 
-          slii.insert_into("tableX", ["key1", "key2", "key3"]).values("b", 100, 210)
+          sli2.insert_into("tableX", ["key1", "key2", "key3"]).values("b", 100, 210)
           .run(function(ret, fulfill, reject) {
             console.log("insert 2 ok");
             fulfill();
           });
 
-          slii.insert_into("tableX", ["key1", "key2", "key3"]).values("a", 200, 200)
+          sli2.insert_into("tableX", ["key1", "key2", "key3"]).values("a", 200, 200)
           .run(function(ret, fulfill, reject) {
             console.log("insert 3 ok");
             fulfill();
           });
 
         });
-        dd.setVersion(5, function(slii) {
-          slii.addTask(null, function(done) {
+        dd.setVersion(5, function(sli2) {
+          sli2.addTask(null, function(done) {
             console.log("*** upgrade 5 start ***");
             done();
           });
 
-          slii.createIndex("tableX", "tblx_idx1", ["key1", "key2"])
+          sli2.createIndex("tableX", "tblx_idx1", ["key1", "key2"])
           .run(function(res, fulfill, reject) {
             console.log("create index tblx_idx1 ok");
             fulfill();
           });
         });
-        dd.setVersion(3, function(slii) {
-          slii.addTask(null, function(done) {
+        dd.setVersion(3, function(sli2) {
+          sli2.addTask(null, function(done) {
             console.log("*** upgrade 3 start ***");
             done();
           });
 
-          slii.createIndex("tableY", "tbly_idx1", ["key1"])
+          sli2.createIndex("tableY", "tbly_idx1", ["key1"])
           .run(function(res, fulfill, reject) {
             console.log("create index tbly_idx1 ok");
             fulfill();
           });
 
-          slii.createIndex("tableX", "tblx_idx2", ["key1", "key3"])
+          sli2.createIndex("tableX", "tblx_idx2", ["key1", "key3"])
           .run(function(res, fulfill, reject) {
             console.log("create index tblx_idx2 ok");
             fulfill();
@@ -611,27 +611,27 @@
       })
       .then(function() {
         return test("test 5-1-1", function(done) {
-          var slii = new SLII("test");
-          slii.deleteDatabase()
+          var sli2 = new SLI2("test");
+          sli2.deleteDatabase()
           .then(function() { console.log("delete database ok") })
           .catch(function() { console.log("delete database ng"); });
 
-          slii.open(dd)
+          sli2.open(dd)
           .then(function() {
             var result1 = match_array(
-                  slii.db.objectStoreNames, ["tableX", "tableY"]
+                  sli2.db.objectStoreNames, ["tableX", "tableY"]
                 ),
                 result2 = match_array(
-                  slii.db.transaction("tableX").objectStore("tableX").indexNames, ["tblx_idx1"]
+                  sli2.db.transaction("tableX").objectStore("tableX").indexNames, ["tblx_idx1"]
                 ),
-                result3 = slii.getCurrentVersion() === 5;
+                result3 = sli2.getCurrentVersion() === 5;
 
             var result_data = [
               { key1: "a", key2: 100, key3: 200 },
               { key1: "b", key2: 100, key3: 210 },
               { key1: "a", key2: 200, key3: 200 }
-            ]
-            slii
+            ];
+            sli2
             .select()
             .from("tableX")
             .run(function(rows) {

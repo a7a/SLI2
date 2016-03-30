@@ -5,16 +5,16 @@
 
   var ERROR = {
     not_open:
-      new Error("SLII is not open."),
+      new Error("SLI2 is not open."),
     already_open:
-      new Error("SLII is already opened."),
+      new Error("SLI2 is already opened."),
     closed:
-      new Error("SLII is already closed."),
+      new Error("SLI2 is already closed."),
     no_version_map: function(version) {
-      return new Error("SLII has no version-map (" + version + ")");
+      return new Error("SLI2 has no version-map (" + version + ")");
     },
     no_definition: function(version) {
-      return new Error("SLII has no version-definition (" + version + ")");
+      return new Error("SLI2 has no version-definition (" + version + ")");
     },
     upgrade_error: function(err) {
       return new Error("Upgrade error: " + err.name + ": " + err.message + ".");
@@ -29,9 +29,9 @@
       new Error("Transaction already exist."),
     no_transaction: function(name) {
       if(name) {
-        return new Error("SLII has no transaction('" + name + "')");
+        return new Error("SLI2 has no transaction('" + name + "')");
       } else {
-        return new Error("SLII has no transaction.");
+        return new Error("SLI2 has no transaction.");
       }
     },
     table_already_exist: function(name) {
@@ -58,8 +58,8 @@
       return new Error("No options as '" + meth + "'");
     },
     idb_objects_not_exists: new Error("IDB objects not exists."),
-    idb_objects_not_used: new Error("IDB objects not used(not exec SLII#useIndexedDB)."),
-    mode_is_no_idb: new Error("SLII mode is 'no_idb'."),
+    idb_objects_not_used: new Error("IDB objects not used(not exec SLI2#useIndexedDB)."),
+    mode_is_no_idb: new Error("SLI2 mode is 'no_idb'."),
     upgrade_unable: new Error("Upgrade unable (upgrading only on DatabaseDefinition)"),
 
     invalid_description: function(meth) {
@@ -71,7 +71,7 @@
     invalid_state: function(meth) {
       return new Error("Invalid state: " + meth);
     },
-    querable_is_not_initialized: new Error("Dml is not initialized (no SLII object)."),
+    querable_is_not_initialized: new Error("Dml is not initialized (no SLI2 object)."),
     require_select_query: new Error("Joined qauery must be select query."),
     kriteria_prefix_conflict: function(prefix1, prefix2) {
       return new Error("Kriteria Error: key prefix conflict '" + prefix1 + "', '" + prefix2 + "'.");

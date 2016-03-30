@@ -1,4 +1,4 @@
-/* SLII.js */
+/* SLI2.js */
 
 (function(cxt) {
   "use strict";
@@ -18,7 +18,7 @@
   * @param {Object} opt - option
   *   opt.mode {String} -
   */
-  var SLII = function SLII(name, opt) {
+  var SLI2 = function SLI2(name, opt) {
     this._name = name;
     this.db = null;
     this.transaction = null;
@@ -46,29 +46,29 @@
   };
 
   /** constants */
-  SLII.USE_IDB = "idb";
-  SLII.NO_IDB = "no_idb";
-  SLII.READ_WRITE = "readwrite";
-  SLII.READ_ONLY = "readonly";
-  SLII.DEFAULT_UPGRADING_HANDLER = "slii_upgrade";
-  SLII.DEFAULT_TRANSACTION_HANDLER = "slii_transaction";
+  SLI2.USE_IDB = "idb";
+  SLI2.NO_IDB = "no_idb";
+  SLI2.READ_WRITE = "readwrite";
+  SLI2.READ_ONLY = "readonly";
+  SLI2.DEFAULT_UPGRADING_HANDLER = "sli2_upgrade";
+  SLI2.DEFAULT_TRANSACTION_HANDLER = "sli2_transaction";
 
   /**
   * @public
   * @function
   * @returns {void}
   */
-  SLII.prototype.useIndexedDB = function useIndexedDB() {
+  SLI2.prototype.useIndexedDB = function useIndexedDB() {
     this._idb_objects = idbInit();
 
     if(this._idb_objects === null) {
       throw ERROR.idb_objects_not_exists;
 
     } else {
-      if(this._mode === SLII.NO_IDB) {
+      if(this._mode === SLI2.NO_IDB) {
         this._opened = false;
       }
-      this._mode = SLII.USE_IDB;
+      this._mode = SLI2.USE_IDB;
       this._use_idb = true;
     }
   };
@@ -81,12 +81,12 @@
   *   "no_idb" is not available indexedDB(usable select method only)
   * @returns {void}
   */
-  SLII.prototype.setMode = function setMode(mode) {
-    if(mode === SLII.USE_IDB) {
+  SLI2.prototype.setMode = function setMode(mode) {
+    if(mode === SLI2.USE_IDB) {
       this.useIndexedDB();
 
-    } else if(mode === SLII.NO_IDB) {
-      this._mode = SLII.NO_IDB;
+    } else if(mode === SLI2.NO_IDB) {
+      this._mode = SLI2.NO_IDB;
       this._idb_objects = null;
       this._use_idb = false;
       this._opened = true;
@@ -100,7 +100,7 @@
   * @function
   * @returns {DatabaseDefinition}
   */
-  SLII.createDatabaseDefinition = function createDatabaseDefinition() {
+  SLI2.createDatabaseDefinition = function createDatabaseDefinition() {
     return new DatabaseDefinition();
   };
 
@@ -111,11 +111,11 @@
   * @param {Function} block_proc - request blocking process
   * @returns {Promise}
   */
-  SLII.prototype.deleteDatabase = function deleteDatabase(name, block_proc) {
+  SLI2.prototype.deleteDatabase = function deleteDatabase(name, block_proc) {
     var that = this;
 
     return new Promise(function(fulfill, reject) {
-      if(that._mode === SLII.NO_IDB) {
+      if(that._mode === SLI2.NO_IDB) {
         reject(ERROR.mode_is_no_idb);
         return;
 
@@ -143,7 +143,7 @@
   * @function
   * @returns {void}
   */
-  SLII.prototype._initTables = function _initTables() {
+  SLI2.prototype._initTables = function _initTables() {
     var db = this.db;
 
     for(var i = 0, l = db.objectStoreNames.length; i < l; i = i + 1) {
@@ -159,7 +159,7 @@
   * @function
   * @returns {void}
   */
-  SLII.prototype._openTables = function _openTables(tra, handling, tables) {
+  SLI2.prototype._openTables = function _openTables(tra, handling, tables) {
     var _tables = tables || this.tables;
 
     for(var table_name in _tables) {
@@ -172,7 +172,7 @@
   * @function
   * @returns {void}
   */
-  SLII.prototype._closeTables = function _closeTables(handling, tables) {
+  SLI2.prototype._closeTables = function _closeTables(handling, tables) {
     var _tables = tables || this.tables;
 
     for(var table_name in _tables) {
@@ -185,7 +185,7 @@
   * @function
   * @return {void}
   */
-  SLII.prototype._destroyTables = function _destroyTables() {
+  SLI2.prototype._destroyTables = function _destroyTables() {
     for(var table_name in this.tables) {
       this.tables[table_name].destroy();
     }
@@ -197,7 +197,7 @@
   * @param {IDBDatabase} db -
   * @returns {void}
   */
-  SLII.prototype._initInOpen = function _initInOpen(db) {
+  SLI2.prototype._initInOpen = function _initInOpen(db) {
     this.db = db;
     if(this._version === 0) {
       this._version = db.version;
@@ -211,7 +211,7 @@
   * @function
   * @returns {Boolean}
   */
-  SLII.prototype.isUpgrading = function isUpgrading() {
+  SLI2.prototype.isUpgrading = function isUpgrading() {
     return this._upgrading;
   };
 
@@ -220,7 +220,7 @@
   * @funciton
   * @returns {Boolean}
   */
-  SLII.prototype.isTransacting = function isTransacting() {
+  SLI2.prototype.isTransacting = function isTransacting() {
     return this._transacting;
   };
 
@@ -230,7 +230,7 @@
   * @param {DatabaseDefinition} db_def
   * @returns {Promise}
   */
-  SLII.prototype.open = function open(db_def) {
+  SLI2.prototype.open = function open(db_def) {
     var that = this,
         req = null,
         version_map = [],
@@ -241,7 +241,7 @@
     return new Promise(function(fulfill, reject) {
       var error = null;
 
-      if(that._mode === SLII.NO_IDB) {
+      if(that._mode === SLI2.NO_IDB) {
         reject(ERROR.mode_is_no_idb);
         return;
 
@@ -450,7 +450,7 @@
   * @function
   * @retuns {Promise}
   */
-  SLII.prototype.close = function close() {
+  SLI2.prototype.close = function close() {
     var that = this;
 
     return new Promise(function(fulfill) {
@@ -486,7 +486,7 @@
   * @function
   * @returns {Promise}
   */
-  SLII.prototype.destroy = function destroy() {
+  SLI2.prototype.destroy = function destroy() {
     var that = this;
 
     return this.close()
@@ -502,7 +502,7 @@
   * @function
   * @returns {Number}
   */
-  SLII.prototype.getCurrentVersion = function getCurrentVersion() {
+  SLI2.prototype.getCurrentVersion = function getCurrentVersion() {
     return this._version;
   };
 
@@ -511,8 +511,8 @@
   * @function
   * @returns {Number}
   */
-  SLII.prototype.getNewVersion = function getNewVersion() {
-    if(this._mode === SLII.NO_IDB) {
+  SLI2.prototype.getNewVersion = function getNewVersion() {
+    if(this._mode === SLI2.NO_IDB) {
       throw ERROR.mode_is_no_idb;
 
     } else if(!this._opened) {
@@ -535,8 +535,8 @@
   * @param {Function} func - transaction process
   * @returns {Promise}
   */
-  SLII.prototype.begin_transaction =
-  SLII.prototype.beginTransaction = function beginTransaction(table_names, type, func) {
+  SLI2.prototype.begin_transaction =
+  SLI2.prototype.beginTransaction = function beginTransaction(table_names, type, func) {
     var that = this;
 
     return new Promise(function(fulfill, reject) {
@@ -549,7 +549,7 @@
         that._transacting = false;
 
         try {
-          that._closeTables("slii_transaction", _tables);
+          that._closeTables("sli2_transaction", _tables);
 
         } catch(err) {
           reject(err);
@@ -562,7 +562,7 @@
         _table_names[0] = table_names;
       }
 
-      if(that._mode === SLII.NO_IDB) {
+      if(that._mode === SLI2.NO_IDB) {
         reject(ERROR.mode_is_no_idb);
 
       } else if(!that._opened) {
@@ -602,7 +602,7 @@
         that.transaction = tra;
 
         try {
-          that._openTables(tra, "slii_transaction", _tables);
+          that._openTables(tra, "sli2_transaction", _tables);
 
         } catch(err) {
           reject(err);
@@ -637,14 +637,14 @@
   * @param {Function} end - callback to process end
   * @returns {Promise}
   */
-  SLII.prototype.upgrade = function upgrade(exec, end) {
+  SLI2.prototype.upgrade = function upgrade(exec, end) {
     var that = this;
 
     return new Promise(function(fulfill, reject) {
       var _exec = typeof exec === "function" ? exec : function() {},
           _end = typeof end === "function" ? end : function() {};
 
-      if(that._mode === SLII.NO_IDB) {
+      if(that._mode === SLI2.NO_IDB) {
         reject(ERROR.mode_is_no_idb);
 
       } else if(!that._upgrade_enable) {
@@ -672,7 +672,7 @@
           };
           that.db = db;
           that.transaction = tra;
-          that._openTables(tra, "slii_upgrade");
+          that._openTables(tra, "sli2_upgrade");
 
           try {
             that._tasker.auto_run = false;
@@ -693,7 +693,7 @@
             that.db = e.target.result;
           }
           that.transaction = null;
-          that._closeTables("slii_upgrade");
+          that._closeTables("sli2_upgrade");
 
           _end();
           fulfill();
@@ -722,7 +722,7 @@
   * @params {Function} func - callback function
   * @returns {void}
   */
-  SLII.prototype.addTask = function addTask(obj, func) {
+  SLI2.prototype.addTask = function addTask(obj, func) {
     if(this._closed) {
       throw ERROR.closed;
     }
@@ -737,7 +737,7 @@
   * @description
   *   run process from task queue
   */
-  SLII.prototype.runQueue = function runQueue() {
+  SLI2.prototype.runQueue = function runQueue() {
     if(this._closed) {
       throw ERROR.closed;
     }
@@ -752,11 +752,11 @@
   * @param {Object} opt -
   * @retuns {Ddl}
   */
-  SLII.prototype.create_table =
-  SLII.prototype.createTable = function createTable(name, opt) {
+  SLI2.prototype.create_table =
+  SLI2.prototype.createTable = function createTable(name, opt) {
     var _opt = opt ? opt : { autoIncrement: true };
 
-    if(this._mode === SLII.NO_IDB) {
+    if(this._mode === SLI2.NO_IDB) {
       throw ERROR.mode_is_no_idb;
 
     } else if(!this._upgrade_enable) {
@@ -781,9 +781,9 @@
   * @param {String} name -
   * @returns {Ddl}
   */
-  SLII.prototype.drop_table =
-  SLII.prototype.dropTable = function dropTable(name) {
-    if(this._mode === SLII.NO_IDB) {
+  SLI2.prototype.drop_table =
+  SLI2.prototype.dropTable = function dropTable(name) {
+    if(this._mode === SLI2.NO_IDB) {
       throw ERROR.mode_is_no_idb;
 
     } else if(!this._upgrade_enable) {
@@ -809,9 +809,9 @@
   * @param {Object} opt - createIndex option
   * @returns {Ddl}
   */
-  SLII.prototype.create_index =
-  SLII.prototype.createIndex = function createIndex(table_name, idx_name, opt) {
-    if(this._mode === SLII.NO_IDB) {
+  SLI2.prototype.create_index =
+  SLI2.prototype.createIndex = function createIndex(table_name, idx_name, opt) {
+    if(this._mode === SLI2.NO_IDB) {
       throw ERROR.mode_is_no_idb;
 
     } else if(!this._upgrade_enable) {
@@ -839,9 +839,9 @@
   * @param {String} idx_name - target index name
   * @returns {Promise}
   */
-  SLII.prototype.drop_index =
-  SLII.prototype.dropIndex = function dropIndex(table_name, idx_name) {
-    if(this._mode === SLII.NO_IDB) {
+  SLI2.prototype.drop_index =
+  SLI2.prototype.dropIndex = function dropIndex(table_name, idx_name) {
+    if(this._mode === SLI2.NO_IDB) {
       throw ERROR.mode_is_no_idb;
 
     } else if(!this._opened) {
@@ -865,7 +865,7 @@
   * @param {Function} selection
   * @returns {Dml}
   */
-  SLII.prototype.select = function select(selection) {
+  SLI2.prototype.select = function select(selection) {
     if(!this._opened) {
       throw ERROR.not_open;
 
@@ -885,9 +885,9 @@
   * @param {Array} columns - insert target columns
   * @returns {Dml}
   */
-  SLII.prototype.insert_into =
-  SLII.prototype.insertInto = function insert_into(table, columns) {
-    if(this._mode === SLII.NO_IDB) {
+  SLI2.prototype.insert_into =
+  SLI2.prototype.insertInto = function insert_into(table, columns) {
+    if(this._mode === SLI2.NO_IDB) {
       throw ERROR.mode_is_no_idb;
 
     } else if(!this._opened) {
@@ -908,9 +908,9 @@
   * @param {String} table - delete target table
   * @returns {Dml}
   */
-  SLII.prototype.delete_from =
-  SLII.prototype.deleteFrom = function delete_from(table) {
-    if(this._mode === SLII.NO_IDB) {
+  SLI2.prototype.delete_from =
+  SLI2.prototype.deleteFrom = function delete_from(table) {
+    if(this._mode === SLI2.NO_IDB) {
       throw ERROR.mode_is_no_idb;
 
     } else if(!this._opened) {
@@ -931,8 +931,8 @@
   * @param {String} table - update target table
   * @returns {Dml}
   */
-  SLII.prototype.update = function update(table) {
-    if(this._mode === SLII.NO_IDB) {
+  SLI2.prototype.update = function update(table) {
+    if(this._mode === SLI2.NO_IDB) {
       throw ERROR.mode_is_no_idb;
 
     } else if(!this._opened) {
@@ -952,8 +952,8 @@
   * @function
   * @returns {void}
   */
-  SLII.prototype.rollback = function rollback() {
-    if(this._mode === SLII.NO_IDB) {
+  SLI2.prototype.rollback = function rollback() {
+    if(this._mode === SLI2.NO_IDB) {
       throw ERROR.mode_is_no_idb;
 
     } else if(!this._opened) {
@@ -973,6 +973,6 @@
   };
 
 
-  cxt.SLII = SLII;
+  cxt.SLI2 = SLI2;
 
 })((0, eval)("this").window || this);
