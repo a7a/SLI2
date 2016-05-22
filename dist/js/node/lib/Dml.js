@@ -4,7 +4,7 @@
   "use strict";
 
   var global = (0, eval)("this"),
-      ERROR = require("../param/ERROR.js").ERROR,
+      ERROR = require("../param/Error.js").ERROR,
       Querable = require("./Querable.js").Querable,
       Kriteria = require("Kriteria").Kriteria || global.Kriteria,
       SelectionAggregator = require("./SelectionAggregator.js").SelectionAggregator,

@@ -3,7 +3,7 @@
 (function(cxt) {
   "use strict";
 
-  var ERROR = require("../param/ERROR.js").ERROR;
+  var ERROR = require("../param/Error.js").ERROR;
 
 
   /**

@@ -9,7 +9,7 @@
       DatabaseDefinition = require("./lib/DatabaseDefinition.js").DatabaseDefinition,
       Table = require("./lib/Table.js").Table,
       Tasker = require("./lib/Tasker.js").Tasker,
-      ERROR = require("./param/ERROR.js").ERROR;
+      ERROR = require("./param/Error.js").ERROR;
 
   /**
   * @public

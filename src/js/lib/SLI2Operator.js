@@ -41,7 +41,7 @@
 
     var req = null,
         _data = [],
-        num = 0,
+        results = [],
         _success = typeof success === "function" ? success : function() {},
         _error = typeof error === "function" ? error : function() {};
 
@@ -55,13 +55,13 @@
 
     var loop = function loop() {
       req = store.add(_data.shift());
-      req.onsuccess = function() {
-        num = num + 1;
+      req.onsuccess = function(e) {
+        results[results.length] = e.target.result;
 
         if(_data.length > 0) {
           loop();
         } else {
-          _success(num);
+          _success(results);
         }
       };
       req.onerror = function(e) {
@@ -88,7 +88,7 @@
 
     var req = null,
         _data = [],
-        num = 0,
+        results = [],
         _success = typeof success === "function" ? success : function() {},
         _error = typeof error === "function" ? error : function() {};
 
@@ -102,13 +102,13 @@
 
     var loop = function loop() {
       req = store.put(_data.shift());
-      req.onsuccess = function() {
-        num = num + 1;
+      req.onsuccess = function(e) {
+        results[results.length] = e.target.result;
 
         if(_data.length > 0) {
           loop();
         } else {
-          _success(num);
+          _success(results);
         }
       };
       req.onerror = function(e) {

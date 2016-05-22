@@ -1,8 +1,8 @@
 {
-  "name": "SLI2",
-  "version": "0.1.0",
+  "name": "sli2",
+  "version": "0.1.1",
   "description": "Sql Like Interface for IndexedDB (and JSON)",
-  "main": "dist/js/browser/SLI2.js",
+  "main": "dist/js/node/SLI2.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/a7a/SLI2"
@@ -32,10 +32,10 @@
   },
   "devDependencies": {
     "browser-sync": "^1.7.1",
+    "browserify": "^13.0.1",
+    "del": "^2.2.0",
     "gulp": "^3.8.11",
     "gulp-autoprefixer": "^2.0.0",
-    "gulp-browserify": "^0.5.0",
-    "gulp-clean": "^0.3.1",
     "gulp-cssmin": "^0.1.6",
     "gulp-eslint": "^0.11.1",
     "gulp-jasmine": "^2.0.1",
@@ -46,6 +46,7 @@
     "jasmine": "^2.4.1",
     "jasmine-node": "^1.14.5",
     "jasmine-spec-reporter": "^2.4.0",
-    "run-sequence": "^1.0.2"
+    "run-sequence": "^1.0.2",
+    "vinyl-source-stream": "^1.1.0"
   }
 }

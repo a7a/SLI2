@@ -6,7 +6,7 @@
   var global = (0, eval)("this"),
       criteria2IDBQuery = require("criteria2IDBQuery").criteria2IDBQuery || global.criteria2IDBQuery,
       SLI2Operator = require("./SLI2Operator.js").SLI2Operator,
-      ERROR = require("../param/ERROR.js").ERROR;
+      ERROR = require("../param/Error.js").ERROR;
 
   /**
   * @public

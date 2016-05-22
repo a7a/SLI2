@@ -5,7 +5,7 @@
 
   var Querable = require("./Querable.js").Querable,
       Table = require("./Table.js").Table,
-      ERROR = require("../param/ERROR.js").ERROR;
+      ERROR = require("../param/Error.js").ERROR;
 
 
   /**
