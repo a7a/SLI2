@@ -32,10 +32,6 @@ sli2.open()
 
 - - -
 
-[TOC]
-
-- - -
-
 ## Main Class
 
 ### SLI2(String[, Object])
