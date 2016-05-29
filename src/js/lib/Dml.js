@@ -12,7 +12,6 @@
         require("./arraySortWithObjectElement.js").arraySortWithObjectElement,
       arrayUniqueMerge = require("./arrayUniqueMerge.js").arrayUniqueMerge,
       setFunction = require("./setFunction.js").setFunction,
-      //async = require("async"),
       async = require("./asyncLoop.js").asyncLoop,
       SyncPromise = require("./SyncPromise.js").SyncPromise,
       clone = require("clone");
