@@ -1054,12 +1054,16 @@
 
           // **** get data ****
 
-          if(splited_where[that._select_table]) {
+          if(splited_where[that._select_table] || splited_where[that._table_alias]) {
             // select ... from table where ...
             sli2.tables[that._select_table].selectForQuery(
-              extract_where,//.removePrefixes([that._select_table || that._table_alias]),
-              splited_where[that._select_table] ? that._select_table : that._tablea_alias,
+              // where
+              extract_where,
+              // table_name
+              splited_where[that._select_table] ? that._select_table : that._table_alias,
+              // alias
               that._table_alias || (that._joins.length > 0 ? that._select_table : ""),
+              // success
               function(rows) {
                 _exec_fulfill();
                 fulfill1(rows);

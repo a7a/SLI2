@@ -3,7 +3,7 @@
   <div id="result"></div>
 
   <script src="./testutil.js"></script>
-  <script src="../dist/js/browser/min/SLI2.js"></script>
+  <script src="../dist/js/browser/SLI2.js"></script>
 
   <script>
 
@@ -2136,7 +2136,8 @@
             compared = true;
 
             test_result =  match_object(check_data1[i], check_data2[i])
-                        && match_object(check_data1[i], check_data3[i]);
+                        && match_object(check_data1[i], check_data3[i])
+                        && check_data1[1][0] === "b";
 
             if(!test_result) {
               console.log("unmatch");
@@ -2252,7 +2253,8 @@
             compared = true;
 
             test_result =  match_object(check_data1[i], check_data2[i])
-                        && match_object(check_data1[i], check_data3[i]);
+                        && match_object(check_data1[i], check_data3[i])
+                        && check_data1[i][0] === "b";
 
             if(!test_result) {
               console.log("unmatch");
@@ -2267,6 +2269,7 @@
         })
       });
     })
+
     .then(function() {
       return test("test 1-26-1 select.from(as).join(as).join(as)", function(done) {
         var check_data1 = [],
@@ -2367,7 +2370,8 @@
             compared = true;
 
             test_result =  match_object(check_data1[i], check_data2[i])
-                        && match_object(check_data1[i], check_data3[i]);
+                        && match_object(check_data1[i], check_data3[i])
+                        && check_data1[i][0] === "b";
 
             if(!test_result) {
               console.log("unmatch");
@@ -2494,7 +2498,8 @@
             compared = true;
 
             test_result =  match_object(check_data1[i], check_data2[i])
-                        && match_object(check_data1[i], check_data3[i]);
+                        && match_object(check_data1[i], check_data3[i])
+                        && check_data1[i][0] === "b";
 
             if(!test_result) {
               console.log("unmatch");
@@ -2642,7 +2647,8 @@
             compared = true;
 
             test_result =  match_object(check_data1[i], check_data2[i])
-              && match_object(check_data1[i], check_data3[i]);
+                        && match_object(check_data1[i], check_data3[i])
+                        && check_data1[i][0] === "b";
 
             if(!test_result) {
               console.log("unmatch");
@@ -2790,7 +2796,8 @@
             compared = true;
 
             test_result =  match_object(check_data1[i], check_data2[i])
-                        && match_object(check_data1[i], check_data3[i]);
+                        && match_object(check_data1[i], check_data3[i])
+                        && check_data1[i][0] === "b";
 
             if(!test_result) {
               console.log("unmatch");
