@@ -12,7 +12,9 @@
         require("./arraySortWithObjectElement.js").arraySortWithObjectElement,
       arrayUniqueMerge = require("./arrayUniqueMerge.js").arrayUniqueMerge,
       setFunction = require("./setFunction.js").setFunction,
-      async = require("async"),
+      //async = require("async"),
+      async = require("./asyncLoop.js").asyncLoop,
+      SyncPromise = require("./SyncPromise.js").SyncPromise,
       clone = require("clone");
 
 
@@ -1044,7 +1046,7 @@
       }
 
       // **** select ****
-      new Promise(function(fulfill1, reject1) {
+      new SyncPromise(function(fulfill1, reject1) {
         if(that._select_table) {
           if(!sli2.tables[that._select_table]) {
             _reject(ERROR.table_not_exist(that._select_table));
@@ -1153,7 +1155,7 @@
       .then(function(rows1) {
         // **** join ****
 
-        return new Promise(function(fulfill2, reject2) {
+        return new SyncPromise(function(fulfill2, reject2) {
           var joined_rows = [];
 
           if(that._joins.length === 0) {
@@ -1163,7 +1165,7 @@
             var loop_rows = rows1,
                 join_num = 0;
 
-            async.eachSeries(that._joins, function(join, next) {
+            async(that._joins, function(join, next) {
               var querable = join[0],
                   cri = join[1],
                   join_obj = join[2],
@@ -1180,7 +1182,7 @@
               joined_rows = [];
               join_num = join_num + 1;
 
-              new Promise(function(fulfill3, reject3) {
+              new SyncPromise(function(fulfill3, reject3) {
                 if(querable && querable.isSelectQuery) {
                   querable.run(function(rows2, fulfill4) {
                     fulfill4();
@@ -1279,7 +1281,8 @@
                 reject2(e);
               });
 
-            }, function() {
+            })
+            .then(function() {
               loop_rows = [];
               fulfill2(joined_rows);
             });
@@ -1400,9 +1403,9 @@
         })
         .then(function(rows) {
           // **** union or union_all ****
-          return new Promise(function(fulfill1, reject1) {
+          return new SyncPromise(function(fulfill1, reject1) {
             if(that._union_queries.length > 0) {
-              async.eachSeries(that._union_queries, function(union_query, next) {
+              async(that._union_queries, function(union_query, next) {
                 union_query.run(function(rows2) {
                   union_rows = arrayUniqueMerge(union_rows, rows2);
 
@@ -1412,14 +1415,15 @@
                   reject1(err);
                 });
 
-              }, function() {
+              })
+              .then(function() {
                 union_rows = arrayUniqueMerge(union_rows, rows);
 
                 fulfill1(union_rows);
               });
 
             } else if(that._union_all_queries.length > 0) {
-              async.eachSeries(that._union_all_queries, function(union_query, next) {
+              async(that._union_all_queries, function(union_query, next) {
                 union_query.run(function(rows2) {
                   for(i = 0, l = rows2.length; i < l; i = i + 1) {
                     union_rows[union_rows.length] = rows2[i];
@@ -1431,7 +1435,8 @@
                   reject1(err);
                 });
 
-              }, function() {
+              })
+              .then(function() {
                 for(i = 0, l = rows.length; i < l; i = i + 1) {
                   union_rows[union_rows.length] = rows[i];
                 }

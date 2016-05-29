@@ -118,7 +118,7 @@
   * @param {Function} func - transaction process
   * @param {Function} success - callback on process successed
   * @param {Funciton} error - callback on process errored
-  * @return {Promise}
+  * @return {void}
   */
   Table.prototype.beginTransaction = function beginTransaction(type, func, success, error) {
     var that = this,

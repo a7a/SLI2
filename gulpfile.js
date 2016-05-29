@@ -93,11 +93,9 @@ gulp.task('default', ['build'], function() {
     'src/js/param/*.js',
     'src/js/conf/*.js',
     'spec/*.js'
-  ], function(callback) {
+  ], function() {
     runSequence(
-      'js-clean',
-      'js',
-      callback
+      'build'
     );
   });
 });

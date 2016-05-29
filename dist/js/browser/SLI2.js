@@ -1,7 +1,7 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 /* SLI2.js */
 
-(function(cxt) {
+(function(cxt, global) {
   "use strict";
 
   var idbInit = require("./lib/idbInit.js").idbInit,
@@ -975,10 +975,11 @@
 
 
   cxt.SLI2 = SLI2;
+  global.SLI2 = SLI2;
 
-})((0, eval)("this").window || this);
+}(this, (0, eval)("this").window || this));
 
-},{"./lib/DatabaseDefinition.js":2,"./lib/Ddl.js":3,"./lib/Dml.js":4,"./lib/Table.js":8,"./lib/Tasker.js":9,"./lib/idbInit.js":12,"./param/Error.js":14}],2:[function(require,module,exports){
+},{"./lib/DatabaseDefinition.js":2,"./lib/Ddl.js":3,"./lib/Dml.js":4,"./lib/Table.js":9,"./lib/Tasker.js":10,"./lib/idbInit.js":14,"./param/Error.js":16}],2:[function(require,module,exports){
 /* DatabaseDefinition */
 
 (function(cxt) {
@@ -1189,7 +1190,7 @@
 
 }(this));
 
-},{"../param/Error.js":14}],3:[function(require,module,exports){
+},{"../param/Error.js":16}],3:[function(require,module,exports){
 /* Ddl.js */
 
 (function(cxt) {
@@ -1464,7 +1465,7 @@
 
 }(this));
 
-},{"../param/Error.js":14,"./Querable.js":5,"./Table.js":8}],4:[function(require,module,exports){
+},{"../param/Error.js":16,"./Querable.js":5,"./Table.js":9}],4:[function(require,module,exports){
 /* Dml.js */
 
 (function(cxt) {
@@ -1479,7 +1480,9 @@
         require("./arraySortWithObjectElement.js").arraySortWithObjectElement,
       arrayUniqueMerge = require("./arrayUniqueMerge.js").arrayUniqueMerge,
       setFunction = require("./setFunction.js").setFunction,
-      async = require("async"),
+      //async = require("async"),
+      async = require("./asyncLoop.js").asyncLoop,
+      SyncPromise = require("./SyncPromise.js").SyncPromise,
       clone = require("clone");
 
 
@@ -2511,7 +2514,7 @@
       }
 
       // **** select ****
-      new Promise(function(fulfill1, reject1) {
+      new SyncPromise(function(fulfill1, reject1) {
         if(that._select_table) {
           if(!sli2.tables[that._select_table]) {
             _reject(ERROR.table_not_exist(that._select_table));
@@ -2620,7 +2623,7 @@
       .then(function(rows1) {
         // **** join ****
 
-        return new Promise(function(fulfill2, reject2) {
+        return new SyncPromise(function(fulfill2, reject2) {
           var joined_rows = [];
 
           if(that._joins.length === 0) {
@@ -2630,7 +2633,7 @@
             var loop_rows = rows1,
                 join_num = 0;
 
-            async.eachSeries(that._joins, function(join, next) {
+            async(that._joins, function(join, next) {
               var querable = join[0],
                   cri = join[1],
                   join_obj = join[2],
@@ -2647,7 +2650,7 @@
               joined_rows = [];
               join_num = join_num + 1;
 
-              new Promise(function(fulfill3, reject3) {
+              new SyncPromise(function(fulfill3, reject3) {
                 if(querable && querable.isSelectQuery) {
                   querable.run(function(rows2, fulfill4) {
                     fulfill4();
@@ -2746,7 +2749,8 @@
                 reject2(e);
               });
 
-            }, function() {
+            })
+            .then(function() {
               loop_rows = [];
               fulfill2(joined_rows);
             });
@@ -2867,9 +2871,9 @@
         })
         .then(function(rows) {
           // **** union or union_all ****
-          return new Promise(function(fulfill1, reject1) {
+          return new SyncPromise(function(fulfill1, reject1) {
             if(that._union_queries.length > 0) {
-              async.eachSeries(that._union_queries, function(union_query, next) {
+              async(that._union_queries, function(union_query, next) {
                 union_query.run(function(rows2) {
                   union_rows = arrayUniqueMerge(union_rows, rows2);
 
@@ -2879,14 +2883,15 @@
                   reject1(err);
                 });
 
-              }, function() {
+              })
+              .then(function() {
                 union_rows = arrayUniqueMerge(union_rows, rows);
 
                 fulfill1(union_rows);
               });
 
             } else if(that._union_all_queries.length > 0) {
-              async.eachSeries(that._union_all_queries, function(union_query, next) {
+              async(that._union_all_queries, function(union_query, next) {
                 union_query.run(function(rows2) {
                   for(i = 0, l = rows2.length; i < l; i = i + 1) {
                     union_rows[union_rows.length] = rows2[i];
@@ -2898,7 +2903,8 @@
                   reject1(err);
                 });
 
-              }, function() {
+              })
+              .then(function() {
                 for(i = 0, l = rows.length; i < l; i = i + 1) {
                   union_rows[union_rows.length] = rows[i];
                 }
@@ -2928,7 +2934,7 @@
 
 })(this);
 
-},{"../param/Error.js":14,"./Querable.js":5,"./SelectionAggregator.js":7,"./arraySortWithObjectElement.js":10,"./arrayUniqueMerge.js":11,"./setFunction.js":13,"Kriteria":15,"async":20,"clone":26}],5:[function(require,module,exports){
+},{"../param/Error.js":16,"./Querable.js":5,"./SelectionAggregator.js":7,"./SyncPromise.js":8,"./arraySortWithObjectElement.js":11,"./arrayUniqueMerge.js":12,"./asyncLoop.js":13,"./setFunction.js":15,"Kriteria":17,"clone":26}],5:[function(require,module,exports){
 /* Querable.js */
 
 (function(cxt) {
@@ -3014,7 +3020,7 @@
 
 })(this);
 
-},{"../param/Error.js":14}],6:[function(require,module,exports){
+},{"../param/Error.js":16}],6:[function(require,module,exports){
 /* SLI2Operator.js */
 
 (function(cxt) {
@@ -3486,7 +3492,7 @@
 
 })(this);
 
-},{"../param/Error.js":14,"./setFunction.js":13}],7:[function(require,module,exports){
+},{"../param/Error.js":16,"./setFunction.js":15}],7:[function(require,module,exports){
 /* SelectionAggregator.js */
 
 (function(cxt) {
@@ -3841,6 +3847,298 @@
 })(this);
 
 },{}],8:[function(require,module,exports){
+(function(cxt, global) {
+  "use strict";
+
+  var STATE_PENDING = 0,
+      STATE_RESOLVED = 1,
+      STATE_REJECTED = 2;
+
+  var isPromise = function isPromise(obj) {
+    return obj && typeof obj.then === "function";
+  };
+
+  /**
+   * @public
+   * @class
+   */
+  var SyncPromise = function SyncPromise(proc) {
+    this._state = STATE_PENDING;
+    this._on_resolve = null;
+    this._on_reject = null;
+    this._ret = null;
+
+    if(typeof proc !== "function") {
+      throw new Error("TypeError: argument[0] of SyncPromise.constructor must be function.");
+    }
+
+    try {
+      proc(this._resolver.bind(this), this._rejector.bind(this));
+
+    } catch(e) {
+      this._state = STATE_REJECTED;
+
+      this._ret = e;
+    }
+  };
+
+  /**
+   * @public
+   * @function
+   * @param {any} ret -
+   * @returns {void}
+   */
+  SyncPromise.prototype._resolver = function _resolver(ret) {
+    var that = this;
+
+    if(this._state === STATE_PENDING) {
+      if(isPromise(ret)) {
+        return ret
+        .then(function(ret2) {
+          that._ret = ret2;
+
+          if(typeof that._on_resolve === "function") {
+            that._on_resolve(ret2);
+          }
+        })
+        .catch(function(err) {
+          that._ret = err;
+
+          if(typeof that._on_reject === "function") {
+            that._on_reject(err);
+          }
+        });
+      }
+
+      this._state = STATE_RESOLVED;
+      that._ret = ret;
+
+      if(typeof this._on_resolve === "function") {
+        this._on_resolve(this._ret);
+      }
+    }
+  };
+
+  /**
+   * @public
+   * @function
+   * @param {any} ret -
+   * @returns {void}
+   */
+  SyncPromise.prototype._rejector = function _rejector(ret) {
+    var that = this;
+
+    if(this._state === STATE_PENDING) {
+      if(isPromise(ret)) {
+        return ret
+        .then(function(ret2) {
+          that._ret = ret2;
+
+          if(typeof that._on_reject === "function") {
+            that._on_reject(that._ret);
+          }
+        })
+        .catch(function(err) {
+          that._ret = err;
+
+          if(typeof that._on_reject === "function") {
+            that._on_reject(err);
+          }
+        });
+      }
+
+      this._state = STATE_REJECTED;
+      this._ret = ret;
+
+      if(typeof this._on_reject === "function") {
+        this._on_reject(this._ret);
+      }
+    }
+  };
+
+  /**
+   * @public
+   * @function
+   * @param {Function} proc -
+   * @returns {SyncPromise}
+   */
+  SyncPromise.prototype.then = function then(proc) {
+    var that = this,
+        ret = null;
+
+    if(typeof proc !== "function") {
+      throw new Error("TypeError: argument[0] of SyncPromise#then must be function.");
+    }
+
+    if(this._state === STATE_RESOLVED) {
+      try {
+        ret = proc(this._ret);
+
+        if(ret && typeof ret.then === "function") {
+          return ret;
+
+        } else {
+          return new SyncPromise(function(fulfill) {
+            fulfill(ret);
+          });
+        }
+
+      } catch(e) {
+        return new SyncPromise(function(fulfill, reject) {
+          reject(e);
+        });
+      }
+
+    } else if(this._state === STATE_REJECTED) {
+      return new SyncPromise(function(fulfill, reject) {
+        reject(that._ret);
+      });
+
+    } else {
+      return new SyncPromise(function(fulfill, reject) {
+        that._on_resolve = function(val) {
+          try {
+            var ret2 = proc(val);
+
+            if(isPromise(ret2)) {
+              ret2.then(function(ret3) {
+                fulfill(ret3);
+              });
+
+            } else {
+              fulfill(ret2);
+            }
+
+          } catch(e) {
+            reject(e);
+          }
+        };
+        that._on_reject = function(val) {
+          reject(val);
+        };
+      });
+    }
+  };
+
+  /**
+   * @public
+   * @function
+   * @param {Function} proc -
+   * @returns {SyncPromise}
+   */
+  SyncPromise.prototype.catch = function (proc) {
+    var that = this,
+        ret = null;
+
+    if(typeof proc !== "function") {
+      throw new Error("TypeError: argument[0] of SyncPromise#catch must be function.");
+    }
+
+    if(this._state === STATE_RESOLVED) {
+      return new SyncPromise(function(fulfill) {
+        fulfill(that._ret);
+      });
+
+    } else if(this._state === STATE_REJECTED) {
+      try {
+        ret = proc(this._ret);
+
+        if(ret && typeof ret.then === "function") {
+          return ret;
+
+        } else {
+          return new SyncPromise(function(fulfill) {
+            fulfill(ret);
+          });
+        }
+
+      } catch(e) {
+        return new SyncPromise(function(fulfill, reject) {
+          reject(e);
+        });
+      }
+
+    } else {
+      return new SyncPromise(function(fulfill, reject) {
+        that._on_reject = function(val) {
+          try {
+            var ret2 = proc(val);
+
+            if(isPromise(ret2)) {
+              ret2.then(function(ret3) {
+                that._ret = ret3;
+              });
+
+            } else {
+              fulfill(ret2);
+            }
+
+          } catch(e) {
+            reject(e);
+          }
+        };
+        that._on_resolve = function(val) {
+          fulfill(val);
+        };
+      });
+    }
+  };
+
+  /**
+   * @public
+   * @statis
+   * @function
+   * @param {any[]} -
+   * @return {SyncPromise}
+   */
+  SyncPromise.all = function all() {
+    if(!Array.isArray(arguments[0])) {
+      throw new Error("TypeError:");
+    }
+
+    var procs = arguments[0].concat(),
+        ret = [];
+
+    return new SyncPromise(function(fulfill, reject) {
+      var loop = function loop() {
+        try {
+          if(procs.length === 0) {
+            fulfill(ret);
+          }
+
+          var proc = procs.shift();
+
+          if(typeof proc.then === "function") {
+            proc
+            .then(function(r) {
+              ret[ret.length] = r;
+              loop();
+            })
+            .catch(function(err) {
+              reject(err);
+            });
+
+          } else {
+            ret[ret.length] = proc;
+            loop();
+          }
+
+        } catch(e) {
+          reject(e);
+        }
+      };
+
+      loop();
+    });
+  };
+
+
+  cxt.SyncPromise = SyncPromise;
+  global.SyncPromise = SyncPromise;
+
+}(this, (0, eval)("this")));
+
+},{}],9:[function(require,module,exports){
 /* Table.js */
 
 (function(cxt) {
@@ -3961,7 +4259,7 @@
   * @param {Function} func - transaction process
   * @param {Function} success - callback on process successed
   * @param {Funciton} error - callback on process errored
-  * @return {Promise}
+  * @return {void}
   */
   Table.prototype.beginTransaction = function beginTransaction(type, func, success, error) {
     var that = this,
@@ -4361,7 +4659,7 @@
 
 })(this);
 
-},{"../param/Error.js":14,"./SLI2Operator.js":6,"criteria2IDBQuery":27}],9:[function(require,module,exports){
+},{"../param/Error.js":16,"./SLI2Operator.js":6,"criteria2IDBQuery":27}],10:[function(require,module,exports){
 /* Tasker.js */
 (function(cxt) {
   "use strict";
@@ -4472,7 +4770,7 @@
 
 }(this));
 
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 /* arraySortWithObjectElement.js */
 
 (function (cxt) {
@@ -4538,7 +4836,7 @@
 })(this);
 
 
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 /* arrayUniqueMerge.js */
 
 (function(cxt){
@@ -4602,7 +4900,57 @@
 
 })(this);
 
-},{}],12:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
+/* asyncLoop.js */
+
+(function(cxt) {
+  'use strict';
+
+  var SyncPromise = require("./SyncPromise.js").SyncPromise;
+
+  /**
+  * @public
+  * @function
+  * @param {Array} arr
+  * @param {Function} each
+  * @param {Function} end
+  * @returns {Promise}
+  * @description
+  */
+  var asyncLoop = function(arr, each) {
+    var _arr = [];
+
+    for(var i = 0, l = arr.length; i < l; i = i + 1) {
+      _arr[i] = arr[i];
+    }
+
+    return new SyncPromise(function(fulfill, reject) {
+      var loop = function loop() {
+        try {
+          if(_arr.length > 0) {
+            var data = _arr.shift();
+
+            each(data, function() {
+              loop();
+           });
+          } else {
+            fulfill();
+          }
+
+        } catch(e) {
+          reject(e);
+        }
+      };
+      loop();
+    });
+  };
+
+
+  cxt.asyncLoop = asyncLoop;
+
+})(this);
+
+},{"./SyncPromise.js":8}],14:[function(require,module,exports){
 /* idbInit.js */
 
 (function(cxt) {
@@ -4655,7 +5003,7 @@
 
 })(this);
 
-},{}],13:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 /* setFunction.js */
 
 (function(cxt) {
@@ -4775,7 +5123,7 @@
 
 }(this));
 
-},{}],14:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 /* ERROR.js */
 
 (function(cxt) {
@@ -4883,1286 +5231,17 @@
 
 })(this);
 
-},{}],15:[function(require,module,exports){
-!function(t){"use strict";var n=require("./lib/getProperty.js").getProperty,e=require("./lib/matchPrefix.js").matchPrefix,i=require("./lib/Condition.js").Condition,r=require("./lib/evaluation.js").evaluation,o=function(){this._conditionAnd=[],this._conditionOr=[],this._not_flg=!1};o._name_="Kriteria",o.prototype.getConditionAnd=function(){return this._conditionAnd},o.prototype.getConditionOr=function(){return this._conditionOr},o._JS_OPERATOR={eq:"===",ne:"!==",lt:"<",le:"<=",gt:">",ge:">="},o.prototype.addAnd=function(t){this._conditionAnd[this._conditionAnd.length]=t},o.prototype.addOr=function(t){this._conditionOr[this._conditionOr.length]=t},o.prototype.and=function(t){var n=typeof t,e=null;if("string"===n||t instanceof String||"number"===n||t instanceof Number)return r("and",t,this);if(t instanceof o)return e=t,this.addAnd(new i("","",[],"",e)),this;if("function"==typeof t)return e=new o,t(e),this.addAnd(new i("","",[],"",e)),this;throw new Error("invalid type of argument. ("+n+")")},o.prototype.or=function(t){var n=typeof t,e=null;if("string"===n||t instanceof String||"number"===n||t instanceof Number)return r("or",t,this);if(t instanceof o)return e=t,this.addOr(new i("","",[],"",e)),this;if("function"==typeof t)return e=new o,t(e),this.addOr(new i("","",[],"",e)),this;throw new Error("invalid type of argument. ("+n+")")},o.prototype.not=function(){return this._not_flg=!this._not_flg,this},o.parse=function(t){var n=new o,e="";for(e in t.and)n.addAnd(t.and[e]);for(e in t.or)n.andOr(t.or[e]);return t.not&&n.not(),n},o.prototype.match=function(t){var e=0,i=0,r=0,s=0,a="",l="",f=[],h="",c=null,d=[],_=!1,u=null,g=null;for(e=0,i=this._conditionAnd.length;i>e;e+=1)if(u=this._conditionAnd[e],u.criteria instanceof o){if(_=u.criteria.match(t),!_)break}else{if(a=u.left_key,l=u.operator,f=u.right_key,h=u.key_type,c=n(t,a),"value"===h)d=f;else if("key"===h)if(g=n(t,f[0]),Array.isArray(g))if("match"===l||"not_match"===l)for(d=[],r=0,s=g.length;s>r;r+=1)null===g[r]||void 0===g[r]||""===g[r]?d[r]=g[r]:d[r]=new RegExp(g[r]);else d=g;else d="match"===l||"not_match"===l?null===g||void 0===g||""===g?g:[new RegExp(g)]:[g];if(_=void 0===d||~d.indexOf(void 0)||void 0===c?!1:this._compare(c,l,d),!_)break}if(_)return!!(!0^this._not_flg);for(e=0,i=this._conditionOr.length;i>e;e+=1)if(u=this._conditionOr[e],u.criteria instanceof o){if(_=u.criteria.match(t))return!!(!0^this._not_flg)}else{if(a=u.left_key,l=u.operator,f=u.right_key,h=u.key_type,c=n(t,a),"value"===h)d=f;else if("key"===h)if(g=n(t,f[0]),Array.isArray(g))if("match"===l||"not_match"===l)for(d=[],r=0,s=g.length;s>r;r+=1)null===g[r]||void 0===g[r]||""===g[r]?d[r]=g[r]:d[r]=new RegExp(g[r]);else d=g;else d="match"===l||"not_match"===l?null===g||void 0===g||""!==g?g:[new RegExp(g)]:[g];if(_=void 0===d||~d.indexOf(void 0)||void 0===c?!1:this._compare(c,l,d))return!!(!0^this._not_flg)}return!!(!1^this._not_flg)},o.prototype._compare=function(t,n,e){var i=!1;switch(n){case"eq":i=e[0]===t;break;case"ne":i=e[0]!==t;break;case"lt":i=e[0]>t;break;case"le":i=e[0]>=t;break;case"gt":i=e[0]<t;break;case"ge":i=e[0]<=t;break;case"in":i=!!~e.indexOf(t);break;case"not_in":i=!~e.indexOf(t);break;case"between":i=e[0]<=t&&e[1]>=t;break;case"not_between":i=e[0]>t||e[1]<t;break;case"match":i=null===e[0]?null===t||void 0===t?!0:!1:null===t?!1:""===e[0]?""===t?!0:!1:e[0].test(t);break;case"not_match":i=null===e[0]?null===t||void 0===t?!1:!0:null===t?!0:""===e[0]?""===t?!1:!0:!e[0].test(t)}return i},o.prototype.matcher=function(){return new Function("$","return "+this._createMatchingExpression())},o.prototype._createMatchingExpression=function(){var t=0,n=0,e=[],i=[],r="",s="",a=null,l="";for(t=0,n=this._conditionAnd.length;n>t;t+=1)a=this._conditionAnd[t],a.criteria instanceof o?e[e.length]="("+a.criteria._createMatchingExpression()+")":e[e.length]=this._createExpression(a);for(t=0,n=this._conditionOr.length;n>t;t+=1)a=this._conditionOr[t],a.criteria instanceof o?i[i.length]="("+a.criteria._createMatchingExpression()+")":i[i.length]=this._createExpression(a);return r=e.join(" && "),s=i.join(" || "),r&&s?l=r+" || "+s+" ":s?r||(l=s):l=r,this._not_flg&&(l="!("+l+")"),l},o.prototype._createExpression=function(t){return"("+this._createJsExpressionOfKeyIsNotUndefined(t.left_key)+" && "+("key"===t.key_type?this._createJsExpressionOfKeyIsNotUndefined(t.right_key[0])+" && ":"")+this._createJsExpression(t)+")"},o.prototype._createJsExpression=function(t){var n="$."+t.left_key,e=t.operator,i=t.right_key,r=t.key_type,s=o._JS_OPERATOR[e];return s?n+" "+s+" "+this._toStringExpressionFromValue(i[0],r):"in"===e?"value"===r?"!!~"+this._toStringExpressionFromArray(i)+".indexOf("+n+")":"(Array.isArray($."+i[0]+") ? !!~$."+i[0]+".indexOf("+n+"): $."+i[0]+" === "+n+")":"not_in"===e?"value"===r?"!~"+this._toStringExpressionFromArray(i)+".indexOf("+n+")":"(Array.isArray($."+i[0]+") ? !~$."+i[0]+".indexOf("+n+"): $."+i[0]+" !== "+n+")":"between"===e?n+" >= "+this._toStringExpressionFromValue(i[0],r)+" && "+n+" <= "+this._toStringExpressionFromValue(i[1],r):"not_between"===e?n+" < "+this._toStringExpressionFromValue(i[0],r)+" || "+n+" > "+this._toStringExpressionFromValue(i[1],r):"match"===e?void 0===i[0]?!1:null===i[0]?"("+n+" === null ? true : false)":""===i[0]?"("+n+" === '' ? true : false)":"("+i[0]+".test("+n+"))":"not_match"===e?void 0===i[0]?!1:null===i[0]?"("+n+" === null ? false : true)":""===i[0]?"("+n+" === '' ? false : true)":"(!"+i[0]+".test("+n+"))":null},o.prototype._createJsExpressionOfKeyIsNotUndefined=function(t){for(var n=t.split("."),e=[],i=[],r=0,o=n.length;o>r;r+=1)e[e.length]=n[r],i[i.length]="$."+e.join(".")+" !== void 0";return i.join(" && ")},o.prototype._createJSExpressionOfKeyIsUndefined=function(t){for(var n=t.split("."),e=[],i=[],r=0,o=n.length;o>r;r+=1)e[e.length]=n[r],i[i.length]="$."+e.join(".")+" === void 0",i[i.length]="$."+e.join(".")+" === null";return i.join(" || ")},o.prototype._toStringExpressionFromArray=function(t){for(var n=[],e=0,i=t.length;i>e;e+=1)n[n.length]=this._toStringExpressionFromValue(t[e],"value");return"["+n.join(", ")+"]"},o.prototype._toStringExpressionFromValue=function(t,n){return"value"===n&&("string"==typeof t||t instanceof String)?'"'+t+'"':"key"===n?"$."+t:t+""},o.prototype.splitByKeyPrefixes=function(t){if(!Array.isArray(t)||0===t.length)return null;var n={},i=null,r=null,s=[],a="",l="",f="",h=!0,c=!0,d=!0,_="",u=0,g=0,p=0,y=0;for(u=0,g=t.length;g>u;u+=1)n[t[u]]=new o;for(n["else"]=new o,u=0,g=this._conditionAnd.length;g>u;u+=1)if(i=this._conditionAnd[u],i.criteria instanceof o){r=i.criteria.splitByKeyPrefixes(t);for(_ in r)null!==r[_]&&n[_].and(r[_])}else{for(s=[],a=i.left_key,l=i.right_key[0],f=i.key_type,d=!1,p=0,y=t.length;y>p;p+=1)if(s[s.length]=t[p],h=e(a,s),"key"===f&&(c=e(l,s)),"value"===f&&h||"key"===f&&h&&c){n[t[p]].addAnd(i),d=!0;break}d||n["else"].addAnd(i)}for(u=0,g=this._conditionOr.length;g>u;u+=1)if(i=this._conditionOr[u],i.criteria instanceof o){r=i.criteria.splitByKeyPrefixes(t);for(_ in r)null!==r[_]&&n[_].or(r[_])}else{for(s=[],a=i.left_key,l=i.right_key[0],f=i.key_type,d=!1,p=0,y=t.length;y>p;p+=1)if(s[s.length]=t[p],h=e(a,s),"key"===f&&(c=e(l,s)),"value"===f&&h||"key"===f&&h&&c){n[t[p]].addOr(i),d=!0;break}d||n["else"].addOr(i)}for(_ in n)n[_].getConditionAnd().length>0||n[_].getConditionOr().length>0?n[_]._not_flg=this._not_flg:n[_]=null;return n},o.prototype.merge=function(t,n){var e=new o,i=t.getConditionAnd(),r=t.getConditionOr(),s=null,a=!1,l=0,f=0,h=0,c=0;if(this._not_flg!==t._not_flg)throw new Error("Kriteria#merge - collision to not flag.");for(l=0,f=this._conditionAnd.length;f>l;l+=1)e.addAnd(this._conditionAnd[l]);for(l=0,f=this._conditionOr.length;f>l;l+=1)e.addOr(this._conditionOr[l]);if(n){for(l=0,f=i.length;f>l;l+=1){for(s=i[l],a=!1,h=0,c=this._conditionAnd.length;c>h;h+=1)if(0===s.compareTo(this._conditionAnd[h])){a=!0;break}a||e.addAnd(s)}for(l=0,f=r.length;f>l;l+=1){for(s=r[l],a=!1,h=0,c=this._conditionOr.length;c>h;h+=1)if(0===s.compareTo(this._conditionOr[h])){a=!0;break}a||e.addOr(s)}}else{for(l=0,f=i.length;f>l;l+=1)e.addAnd(i[l]);for(l=0,f=r.length;f>l;l+=1)e.addOr(r[l])}return e},o.prototype.compareTo=function(t){var n=function(t,n){return t.compareTo(n)},e=t.getConditionAnd(),i=t.getConditionOr(),r=null,o=null,s=!0,a=0,l=0,f=0,h=0;if(this._conditionAnd.sort(n),e.sort(n),this._conditionOr.sort(n),i.sort(n),this._not_flg&&!t._not_flg)return-1;if(!this._not_flg&&t._not_flg)return 1;for(a=this._conditionAnd.length,l=e.length,h=a>l?a:l,f=0;h>f;f+=1){if(r=this._conditionAnd[f],o=e[f],!r)return-1;if(!o)return 1;if(s=r.compareTo(o),0!==s)return s}for(a=this._conditionOr.length,l=i.length,h=a>l?a:l,f=0;h>f;f+=1){if(r=this._conditionOr[f],o=i[f],!r)return-1;if(!o)return 1;if(s=r.compareTo(o),0!==s)return s}return 0},o.prototype.removePrefixes=function(t){var n=null,e=null,i=0,r=0;if(null===t||void 0===t||!Array.isArray(t)||0===t.length)return this;for(n=new RegExp("^("+t.join("|")+")."),i=0,r=this._conditionAnd.length;r>i;i+=1)e=this._conditionAnd[i],e.criteria instanceof o?e.criteria.removePrefixes(t):(e.left_key=e.left_key.replace(n,""),"key"===e.key_type&&(e.right_key[0]=e.right_key[0].replace(n,"")));for(i=0,r=this._conditionOr.length;r>i;i+=1)e=this._conditionOr[i],e.criteria instanceof o?e.criteria.removePrefixes(t):(e.left_key=e.left_key.replace(n,""),"key"===e.key_type&&(e.right_key[0]=e.right_key[0].replace(n,"")));return this},t.Kriteria=o}((0,eval)("this").window||this);
-},{"./lib/Condition.js":16,"./lib/evaluation.js":17,"./lib/getProperty.js":18,"./lib/matchPrefix.js":19}],16:[function(require,module,exports){
-!function(e){"use strict";var t=function(e,t,r,i,h){this.left_key=e,this.operator=t,this.right_key=Array.isArray(r)||void 0===r||null===r?r:[r],this.key_type=i,this.criteria=h};t.prototype.clone=function(){return new t(this.left_key,this.operator,this.right_key.concat(),this.key_type,this.criteria)},t.prototype.not=function(){switch(this.operator){case"eq":this.operator="ne";break;case"ne":this.operator="eq";break;case"lt":this.operator="ge";break;case"le":this.operator="gt";break;case"gt":this.operator="le";break;case"ge":this.operator="lt";break;case"in":this.operator="not_in";break;case"not_in":this.operator="in";break;case"between":this.operator="not_between";break;case"not_between":this.operator="between";break;case"match":this.operator="not_match";break;case"not_match":this.operator="match"}return this},t.prototype.normalize=function(){var e=[],r=0,i=0;if("value"===this.key_type)switch(this.operator){case"in":for(r=0,i=this.right_key.length;i>r;r+=1)e[e.length]=new t(this.left_key,"eq",[this.right_key[r]],this.key_type,null);break;case"not_in":for(r=0,i=this.right_key.length;i>r;r+=1)e[e.length]=new t(this.left_key,"ne",[this.right_key[r]],this.key_type,null);break;case"between":e[e.length]=new t(this.left_key,"ge",[this.right_key[0]],this.key_type,null),e[e.length]=new t(this.left_key,"le",[this.right_key[1]],this.key_type,null);break;case"not_between":e[e.length]=new t(this.left_key,"lt",[this.right_key[0]],this.key_type,null),e[e.length]=new t(this.left_key,"gt",[this.right_key[1]],this.key_type,null);break;default:e[e.length]=this.clone()}else e[e.length]=this.clone();return e},t.prototype.compareTo=function(e){if(this.criteria&&!e.criteria)return 1;if(!this.criteria&&e.criteria)return-1;if(this.criteria&&e.criteria)return this.criteria.compareTo(e.criteria);if(this.left_key>e.left_key)return 1;if(this.left_key<e.left_key)return-1;if(this.operator>e.operator)return 1;if(this.operator<e.operator)return-1;if(this.key_type>e.key_type)return 1;if(this.key_type<e.key_type)return-1;for(var t=0,r=this.right_key.length;r>t;t+=1){if(this.right_key[t]>e.right_key[t])return 1;if(this.right_key[t]<e.right_key[t])return-1}return 0},e.Condition=t}(this);
 },{}],17:[function(require,module,exports){
-!function(e){"use strict";var n=require("./Condition.js").Condition,t=function(e,n,t){return{eq:{key:function(r){return u(t,e,"eq",n,"key",[r]),t},value:function(r){return u(t,e,"eq",n,"value",[r]),t}},ne:{key:function(r){return u(t,e,"ne",n,"key",[r]),t},value:function(r){return u(t,e,"ne",n,"value",[r]),t}},lt:{key:function(r){return u(t,e,"lt",n,"key",[r]),t},value:function(r){return u(t,e,"lt",n,"value",[r]),t}},le:{key:function(r){return u(t,e,"le",n,"key",[r]),t},value:function(r){return u(t,e,"le",n,"value",[r]),t}},gt:{key:function(r){return u(t,e,"gt",n,"key",[r]),t},value:function(r){return u(t,e,"gt",n,"value",[r]),t}},ge:{key:function(r){return u(t,e,"ge",n,"key",[r]),t},value:function(r){return u(t,e,"ge",n,"value",[r]),t}},"in":{key:function(){return u(t,e,"in",n,"key",[].slice.apply(arguments)),t},value:function(){return u(t,e,"in",n,"value",[].slice.apply(arguments)),t}},not_in:{key:function(){return u(t,e,"not_in",n,"key",[].slice.apply(arguments)),t},value:function(){return u(t,e,"not_in",n,"value",[].slice.apply(arguments)),t}},between:function(r,i){return u(t,e,"between",n,"value",[r,i]),t},not_between:function(r,i){return u(t,e,"not_between",n,"value",[r,i]),t},match:function(r){var i=r instanceof RegExp?r:null===r?null:void 0===r?void 0:""===r?"":new RegExp(r);return u(t,e,"match",n,"value",[i]),t},not_match:function(r){var i=r instanceof RegExp?r:null===r?null:void 0===r?void 0:""===r?"":new RegExp(r);return u(t,e,"not_match",n,"value",[i]),t}}},u=function(e,t,u,r,i,o){if("and"===t.toLowerCase())e.addAnd(new n(r,u,o,i,null));else{if("or"!==t.toLowerCase())throw new Error("invalid type: "+t+"(at key_name:"+r+", key_type: "+i+", operator:"+u+")");e.addOr(new n(r,u,o,i,null))}};e.evaluation=t}(this);
-},{"./Condition.js":16}],18:[function(require,module,exports){
-!function(t){"use strict";var n=function(t,n){for(var r=n.split("."),e=t,i=0,f=r.length;f>i;i+=1){if("string"==typeof e||e instanceof String||"number"==typeof e||e instanceof Number)return;if(!(r[i]in e))return;e=e[r[i]]}return e};t.getProperty=n}(this);
+!function(t){"use strict";var n=require("./lib/getProperty.js").getProperty,e=require("./lib/matchPrefix.js").matchPrefix,i=require("./lib/Condition.js").Condition,r=require("./lib/evaluation.js").evaluation,o=function(){this._conditionAnd=[],this._conditionOr=[],this._not_flg=!1};o._name_="Kriteria",o.prototype.getConditionAnd=function(){return this._conditionAnd},o.prototype.getConditionOr=function(){return this._conditionOr},o._JS_OPERATOR={eq:"===",ne:"!==",lt:"<",le:"<=",gt:">",ge:">="},o.prototype.addAnd=function(t){this._conditionAnd[this._conditionAnd.length]=t},o.prototype.addOr=function(t){this._conditionOr[this._conditionOr.length]=t},o.prototype.and=function(t){var n=typeof t,e=null;if("string"===n||t instanceof String||"number"===n||t instanceof Number)return r("and",t,this);if(t instanceof o)return e=t,this.addAnd(new i("","",[],"",e)),this;if("function"==typeof t)return e=new o,t(e),this.addAnd(new i("","",[],"",e)),this;throw new Error("invalid type of argument. ("+n+")")},o.prototype.or=function(t){var n=typeof t,e=null;if("string"===n||t instanceof String||"number"===n||t instanceof Number)return r("or",t,this);if(t instanceof o)return e=t,this.addOr(new i("","",[],"",e)),this;if("function"==typeof t)return e=new o,t(e),this.addOr(new i("","",[],"",e)),this;throw new Error("invalid type of argument. ("+n+")")},o.prototype.not=function(){return this._not_flg=!this._not_flg,this},o.parse=function(t){var n=new o,e="";for(e in t.and)n.addAnd(t.and[e]);for(e in t.or)n.andOr(t.or[e]);return t.not&&n.not(),n},o.prototype.match=function(t){var e=0,i=0,r=0,s=0,a="",l="",f=[],h="",c=null,d=[],_=!1,u=null,g=null;for(e=0,i=this._conditionAnd.length;i>e;e+=1)if(u=this._conditionAnd[e],u.criteria instanceof o){if(_=u.criteria.match(t),!_)break}else{if(a=u.left_key,l=u.operator,f=u.right_key,h=u.key_type,c=n(t,a),"value"===h)d=f;else if("key"===h)if(g=n(t,f[0]),Array.isArray(g))if("match"===l||"not_match"===l)for(d=[],r=0,s=g.length;s>r;r+=1)null===g[r]||void 0===g[r]||""===g[r]?d[r]=g[r]:d[r]=new RegExp(g[r]);else d=g;else d="match"===l||"not_match"===l?null===g||void 0===g||""===g?g:[new RegExp(g)]:[g];if(_=void 0===d||~d.indexOf(void 0)||void 0===c?!1:this._compare(c,l,d),!_)break}if(_)return!!(!0^this._not_flg);for(e=0,i=this._conditionOr.length;i>e;e+=1)if(u=this._conditionOr[e],u.criteria instanceof o){if(_=u.criteria.match(t))return!!(!0^this._not_flg)}else{if(a=u.left_key,l=u.operator,f=u.right_key,h=u.key_type,c=n(t,a),"value"===h)d=f;else if("key"===h)if(g=n(t,f[0]),Array.isArray(g))if("match"===l||"not_match"===l)for(d=[],r=0,s=g.length;s>r;r+=1)null===g[r]||void 0===g[r]||""===g[r]?d[r]=g[r]:d[r]=new RegExp(g[r]);else d=g;else d="match"===l||"not_match"===l?null===g||void 0===g||""!==g?g:[new RegExp(g)]:[g];if(_=void 0===d||~d.indexOf(void 0)||void 0===c?!1:this._compare(c,l,d))return!!(!0^this._not_flg)}return!!(!1^this._not_flg)},o.prototype._compare=function(t,n,e){var i=!1;switch(n){case"eq":i=e[0]===t;break;case"ne":i=e[0]!==t;break;case"lt":i=e[0]>t;break;case"le":i=e[0]>=t;break;case"gt":i=e[0]<t;break;case"ge":i=e[0]<=t;break;case"in":i=!!~e.indexOf(t);break;case"not_in":i=!~e.indexOf(t);break;case"between":i=e[0]<=t&&e[1]>=t;break;case"not_between":i=e[0]>t||e[1]<t;break;case"match":i=null===e[0]?null===t||void 0===t?!0:!1:null===t?!1:""===e[0]?""===t?!0:!1:e[0].test(t);break;case"not_match":i=null===e[0]?null===t||void 0===t?!1:!0:null===t?!0:""===e[0]?""===t?!1:!0:!e[0].test(t)}return i},o.prototype.matcher=function(){return new Function("$","return "+this._createMatchingExpression())},o.prototype._createMatchingExpression=function(){var t=0,n=0,e=[],i=[],r="",s="",a=null,l="";for(t=0,n=this._conditionAnd.length;n>t;t+=1)a=this._conditionAnd[t],a.criteria instanceof o?e[e.length]="("+a.criteria._createMatchingExpression()+")":e[e.length]=this._createExpression(a);for(t=0,n=this._conditionOr.length;n>t;t+=1)a=this._conditionOr[t],a.criteria instanceof o?i[i.length]="("+a.criteria._createMatchingExpression()+")":i[i.length]=this._createExpression(a);return r=e.join(" && "),s=i.join(" || "),r&&s?l=r+" || "+s+" ":s?r||(l=s):l=r,this._not_flg&&(l="!("+l+")"),l},o.prototype._createExpression=function(t){return"("+this._createJsExpressionOfKeyIsNotUndefined(t.left_key)+" && "+("key"===t.key_type?this._createJsExpressionOfKeyIsNotUndefined(t.right_key[0])+" && ":"")+this._createJsExpression(t)+")"},o.prototype._createJsExpression=function(t){var n="$."+t.left_key,e=t.operator,i=t.right_key,r=t.key_type,s=o._JS_OPERATOR[e];return s?n+" "+s+" "+this._toStringExpressionFromValue(i[0],r):"in"===e?"value"===r?"!!~"+this._toStringExpressionFromArray(i)+".indexOf("+n+")":"(Array.isArray($."+i[0]+") ? !!~$."+i[0]+".indexOf("+n+"): $."+i[0]+" === "+n+")":"not_in"===e?"value"===r?"!~"+this._toStringExpressionFromArray(i)+".indexOf("+n+")":"(Array.isArray($."+i[0]+") ? !~$."+i[0]+".indexOf("+n+"): $."+i[0]+" !== "+n+")":"between"===e?n+" >= "+this._toStringExpressionFromValue(i[0],r)+" && "+n+" <= "+this._toStringExpressionFromValue(i[1],r):"not_between"===e?n+" < "+this._toStringExpressionFromValue(i[0],r)+" || "+n+" > "+this._toStringExpressionFromValue(i[1],r):"match"===e?void 0===i[0]?!1:null===i[0]?"("+n+" === null ? true : false)":""===i[0]?"("+n+" === '' ? true : false)":"("+i[0]+".test("+n+"))":"not_match"===e?void 0===i[0]?!1:null===i[0]?"("+n+" === null ? false : true)":""===i[0]?"("+n+" === '' ? false : true)":"(!"+i[0]+".test("+n+"))":null},o.prototype._createJsExpressionOfKeyIsNotUndefined=function(t){for(var n=t.split("."),e=[],i=[],r=0,o=n.length;o>r;r+=1)e[e.length]=n[r],i[i.length]="$."+e.join(".")+" !== void 0";return i.join(" && ")},o.prototype._createJSExpressionOfKeyIsUndefined=function(t){for(var n=t.split("."),e=[],i=[],r=0,o=n.length;o>r;r+=1)e[e.length]=n[r],i[i.length]="$."+e.join(".")+" === void 0",i[i.length]="$."+e.join(".")+" === null";return i.join(" || ")},o.prototype._toStringExpressionFromArray=function(t){for(var n=[],e=0,i=t.length;i>e;e+=1)n[n.length]=this._toStringExpressionFromValue(t[e],"value");return"["+n.join(", ")+"]"},o.prototype._toStringExpressionFromValue=function(t,n){return"value"===n&&("string"==typeof t||t instanceof String)?'"'+t+'"':"key"===n?"$."+t:t+""},o.prototype.splitByKeyPrefixes=function(t){if(!Array.isArray(t)||0===t.length)return null;var n={},i=null,r=null,s=[],a="",l="",f="",h=!0,c=!0,d=!0,_="",u=0,g=0,p=0,y=0;for(u=0,g=t.length;g>u;u+=1)n[t[u]]=new o;for(n["else"]=new o,u=0,g=this._conditionAnd.length;g>u;u+=1)if(i=this._conditionAnd[u],i.criteria instanceof o){r=i.criteria.splitByKeyPrefixes(t);for(_ in r)null!==r[_]&&n[_].and(r[_])}else{for(s=[],a=i.left_key,l=i.right_key[0],f=i.key_type,d=!1,p=0,y=t.length;y>p;p+=1)if(s[s.length]=t[p],h=e(a,s),"key"===f&&(c=e(l,s)),"value"===f&&h||"key"===f&&h&&c){n[t[p]].addAnd(i),d=!0;break}d||n["else"].addAnd(i)}for(u=0,g=this._conditionOr.length;g>u;u+=1)if(i=this._conditionOr[u],i.criteria instanceof o){r=i.criteria.splitByKeyPrefixes(t);for(_ in r)null!==r[_]&&n[_].or(r[_])}else{for(s=[],a=i.left_key,l=i.right_key[0],f=i.key_type,d=!1,p=0,y=t.length;y>p;p+=1)if(s[s.length]=t[p],h=e(a,s),"key"===f&&(c=e(l,s)),"value"===f&&h||"key"===f&&h&&c){n[t[p]].addOr(i),d=!0;break}d||n["else"].addOr(i)}for(_ in n)n[_].getConditionAnd().length>0||n[_].getConditionOr().length>0?n[_]._not_flg=this._not_flg:n[_]=null;return n},o.prototype.merge=function(t,n){var e=new o,i=t.getConditionAnd(),r=t.getConditionOr(),s=null,a=!1,l=0,f=0,h=0,c=0;if(this._not_flg!==t._not_flg)throw new Error("Kriteria#merge - collision to not flag.");for(l=0,f=this._conditionAnd.length;f>l;l+=1)e.addAnd(this._conditionAnd[l]);for(l=0,f=this._conditionOr.length;f>l;l+=1)e.addOr(this._conditionOr[l]);if(n){for(l=0,f=i.length;f>l;l+=1){for(s=i[l],a=!1,h=0,c=this._conditionAnd.length;c>h;h+=1)if(0===s.compareTo(this._conditionAnd[h])){a=!0;break}a||e.addAnd(s)}for(l=0,f=r.length;f>l;l+=1){for(s=r[l],a=!1,h=0,c=this._conditionOr.length;c>h;h+=1)if(0===s.compareTo(this._conditionOr[h])){a=!0;break}a||e.addOr(s)}}else{for(l=0,f=i.length;f>l;l+=1)e.addAnd(i[l]);for(l=0,f=r.length;f>l;l+=1)e.addOr(r[l])}return e},o.prototype.compareTo=function(t){var n=function(t,n){return t.compareTo(n)},e=t.getConditionAnd(),i=t.getConditionOr(),r=null,o=null,s=!0,a=0,l=0,f=0,h=0;if(this._conditionAnd.sort(n),e.sort(n),this._conditionOr.sort(n),i.sort(n),this._not_flg&&!t._not_flg)return-1;if(!this._not_flg&&t._not_flg)return 1;for(a=this._conditionAnd.length,l=e.length,h=a>l?a:l,f=0;h>f;f+=1){if(r=this._conditionAnd[f],o=e[f],!r)return-1;if(!o)return 1;if(s=r.compareTo(o),0!==s)return s}for(a=this._conditionOr.length,l=i.length,h=a>l?a:l,f=0;h>f;f+=1){if(r=this._conditionOr[f],o=i[f],!r)return-1;if(!o)return 1;if(s=r.compareTo(o),0!==s)return s}return 0},o.prototype.removePrefixes=function(t){var n=null,e=null,i=0,r=0;if(null===t||void 0===t||!Array.isArray(t)||0===t.length)return this;for(n=new RegExp("^("+t.join("|")+")."),i=0,r=this._conditionAnd.length;r>i;i+=1)e=this._conditionAnd[i],e.criteria instanceof o?e.criteria.removePrefixes(t):(e.left_key=e.left_key.replace(n,""),"key"===e.key_type&&(e.right_key[0]=e.right_key[0].replace(n,"")));for(i=0,r=this._conditionOr.length;r>i;i+=1)e=this._conditionOr[i],e.criteria instanceof o?e.criteria.removePrefixes(t):(e.left_key=e.left_key.replace(n,""),"key"===e.key_type&&(e.right_key[0]=e.right_key[0].replace(n,"")));return this},t.Kriteria=o}((0,eval)("this").window||this);
+},{"./lib/Condition.js":18,"./lib/evaluation.js":19,"./lib/getProperty.js":20,"./lib/matchPrefix.js":21}],18:[function(require,module,exports){
+!function(e){"use strict";var t=function(e,t,r,i,h){this.left_key=e,this.operator=t,this.right_key=Array.isArray(r)||void 0===r||null===r?r:[r],this.key_type=i,this.criteria=h};t.prototype.clone=function(){return new t(this.left_key,this.operator,this.right_key.concat(),this.key_type,this.criteria)},t.prototype.not=function(){switch(this.operator){case"eq":this.operator="ne";break;case"ne":this.operator="eq";break;case"lt":this.operator="ge";break;case"le":this.operator="gt";break;case"gt":this.operator="le";break;case"ge":this.operator="lt";break;case"in":this.operator="not_in";break;case"not_in":this.operator="in";break;case"between":this.operator="not_between";break;case"not_between":this.operator="between";break;case"match":this.operator="not_match";break;case"not_match":this.operator="match"}return this},t.prototype.normalize=function(){var e=[],r=0,i=0;if("value"===this.key_type)switch(this.operator){case"in":for(r=0,i=this.right_key.length;i>r;r+=1)e[e.length]=new t(this.left_key,"eq",[this.right_key[r]],this.key_type,null);break;case"not_in":for(r=0,i=this.right_key.length;i>r;r+=1)e[e.length]=new t(this.left_key,"ne",[this.right_key[r]],this.key_type,null);break;case"between":e[e.length]=new t(this.left_key,"ge",[this.right_key[0]],this.key_type,null),e[e.length]=new t(this.left_key,"le",[this.right_key[1]],this.key_type,null);break;case"not_between":e[e.length]=new t(this.left_key,"lt",[this.right_key[0]],this.key_type,null),e[e.length]=new t(this.left_key,"gt",[this.right_key[1]],this.key_type,null);break;default:e[e.length]=this.clone()}else e[e.length]=this.clone();return e},t.prototype.compareTo=function(e){if(this.criteria&&!e.criteria)return 1;if(!this.criteria&&e.criteria)return-1;if(this.criteria&&e.criteria)return this.criteria.compareTo(e.criteria);if(this.left_key>e.left_key)return 1;if(this.left_key<e.left_key)return-1;if(this.operator>e.operator)return 1;if(this.operator<e.operator)return-1;if(this.key_type>e.key_type)return 1;if(this.key_type<e.key_type)return-1;for(var t=0,r=this.right_key.length;r>t;t+=1){if(this.right_key[t]>e.right_key[t])return 1;if(this.right_key[t]<e.right_key[t])return-1}return 0},e.Condition=t}(this);
 },{}],19:[function(require,module,exports){
+!function(e){"use strict";var n=require("./Condition.js").Condition,t=function(e,n,t){return{eq:{key:function(r){return u(t,e,"eq",n,"key",[r]),t},value:function(r){return u(t,e,"eq",n,"value",[r]),t}},ne:{key:function(r){return u(t,e,"ne",n,"key",[r]),t},value:function(r){return u(t,e,"ne",n,"value",[r]),t}},lt:{key:function(r){return u(t,e,"lt",n,"key",[r]),t},value:function(r){return u(t,e,"lt",n,"value",[r]),t}},le:{key:function(r){return u(t,e,"le",n,"key",[r]),t},value:function(r){return u(t,e,"le",n,"value",[r]),t}},gt:{key:function(r){return u(t,e,"gt",n,"key",[r]),t},value:function(r){return u(t,e,"gt",n,"value",[r]),t}},ge:{key:function(r){return u(t,e,"ge",n,"key",[r]),t},value:function(r){return u(t,e,"ge",n,"value",[r]),t}},"in":{key:function(){return u(t,e,"in",n,"key",[].slice.apply(arguments)),t},value:function(){return u(t,e,"in",n,"value",[].slice.apply(arguments)),t}},not_in:{key:function(){return u(t,e,"not_in",n,"key",[].slice.apply(arguments)),t},value:function(){return u(t,e,"not_in",n,"value",[].slice.apply(arguments)),t}},between:function(r,i){return u(t,e,"between",n,"value",[r,i]),t},not_between:function(r,i){return u(t,e,"not_between",n,"value",[r,i]),t},match:function(r){var i=r instanceof RegExp?r:null===r?null:void 0===r?void 0:""===r?"":new RegExp(r);return u(t,e,"match",n,"value",[i]),t},not_match:function(r){var i=r instanceof RegExp?r:null===r?null:void 0===r?void 0:""===r?"":new RegExp(r);return u(t,e,"not_match",n,"value",[i]),t}}},u=function(e,t,u,r,i,o){if("and"===t.toLowerCase())e.addAnd(new n(r,u,o,i,null));else{if("or"!==t.toLowerCase())throw new Error("invalid type: "+t+"(at key_name:"+r+", key_type: "+i+", operator:"+u+")");e.addOr(new n(r,u,o,i,null))}};e.evaluation=t}(this);
+},{"./Condition.js":18}],20:[function(require,module,exports){
+!function(t){"use strict";var n=function(t,n){for(var r=n.split("."),e=t,i=0,f=r.length;f>i;i+=1){if("string"==typeof e||e instanceof String||"number"==typeof e||e instanceof Number)return;if(!(r[i]in e))return;e=e[r[i]]}return e};t.getProperty=n}(this);
+},{}],21:[function(require,module,exports){
 !function(r){"use strict";var t=function(r,t){if(0===t.length)return!0;for(var n=0,e=t.length;e>n;n+=1)if(0===r.indexOf(t[n]+"."))return!0;return!1};r.matchPrefix=t}(this);
-},{}],20:[function(require,module,exports){
-(function (process,global){
-/*!
- * async
- * https://github.com/caolan/async
- *
- * Copyright 2010-2014 Caolan McMahon
- * Released under the MIT license
- */
-(function () {
-
-    var async = {};
-    function noop() {}
-    function identity(v) {
-        return v;
-    }
-    function toBool(v) {
-        return !!v;
-    }
-    function notId(v) {
-        return !v;
-    }
-
-    // global on the server, window in the browser
-    var previous_async;
-
-    // Establish the root object, `window` (`self`) in the browser, `global`
-    // on the server, or `this` in some virtual machines. We use `self`
-    // instead of `window` for `WebWorker` support.
-    var root = typeof self === 'object' && self.self === self && self ||
-            typeof global === 'object' && global.global === global && global ||
-            this;
-
-    if (root != null) {
-        previous_async = root.async;
-    }
-
-    async.noConflict = function () {
-        root.async = previous_async;
-        return async;
-    };
-
-    function only_once(fn) {
-        return function() {
-            if (fn === null) throw new Error("Callback was already called.");
-            fn.apply(this, arguments);
-            fn = null;
-        };
-    }
-
-    function _once(fn) {
-        return function() {
-            if (fn === null) return;
-            fn.apply(this, arguments);
-            fn = null;
-        };
-    }
-
-    //// cross-browser compatiblity functions ////
-
-    var _toString = Object.prototype.toString;
-
-    var _isArray = Array.isArray || function (obj) {
-        return _toString.call(obj) === '[object Array]';
-    };
-
-    // Ported from underscore.js isObject
-    var _isObject = function(obj) {
-        var type = typeof obj;
-        return type === 'function' || type === 'object' && !!obj;
-    };
-
-    function _isArrayLike(arr) {
-        return _isArray(arr) || (
-            // has a positive integer length property
-            typeof arr.length === "number" &&
-            arr.length >= 0 &&
-            arr.length % 1 === 0
-        );
-    }
-
-    function _arrayEach(arr, iterator) {
-        var index = -1,
-            length = arr.length;
-
-        while (++index < length) {
-            iterator(arr[index], index, arr);
-        }
-    }
-
-    function _map(arr, iterator) {
-        var index = -1,
-            length = arr.length,
-            result = Array(length);
-
-        while (++index < length) {
-            result[index] = iterator(arr[index], index, arr);
-        }
-        return result;
-    }
-
-    function _range(count) {
-        return _map(Array(count), function (v, i) { return i; });
-    }
-
-    function _reduce(arr, iterator, memo) {
-        _arrayEach(arr, function (x, i, a) {
-            memo = iterator(memo, x, i, a);
-        });
-        return memo;
-    }
-
-    function _forEachOf(object, iterator) {
-        _arrayEach(_keys(object), function (key) {
-            iterator(object[key], key);
-        });
-    }
-
-    function _indexOf(arr, item) {
-        for (var i = 0; i < arr.length; i++) {
-            if (arr[i] === item) return i;
-        }
-        return -1;
-    }
-
-    var _keys = Object.keys || function (obj) {
-        var keys = [];
-        for (var k in obj) {
-            if (obj.hasOwnProperty(k)) {
-                keys.push(k);
-            }
-        }
-        return keys;
-    };
-
-    function _keyIterator(coll) {
-        var i = -1;
-        var len;
-        var keys;
-        if (_isArrayLike(coll)) {
-            len = coll.length;
-            return function next() {
-                i++;
-                return i < len ? i : null;
-            };
-        } else {
-            keys = _keys(coll);
-            len = keys.length;
-            return function next() {
-                i++;
-                return i < len ? keys[i] : null;
-            };
-        }
-    }
-
-    // Similar to ES6's rest param (http://ariya.ofilabs.com/2013/03/es6-and-rest-parameter.html)
-    // This accumulates the arguments passed into an array, after a given index.
-    // From underscore.js (https://github.com/jashkenas/underscore/pull/2140).
-    function _restParam(func, startIndex) {
-        startIndex = startIndex == null ? func.length - 1 : +startIndex;
-        return function() {
-            var length = Math.max(arguments.length - startIndex, 0);
-            var rest = Array(length);
-            for (var index = 0; index < length; index++) {
-                rest[index] = arguments[index + startIndex];
-            }
-            switch (startIndex) {
-                case 0: return func.call(this, rest);
-                case 1: return func.call(this, arguments[0], rest);
-            }
-            // Currently unused but handle cases outside of the switch statement:
-            // var args = Array(startIndex + 1);
-            // for (index = 0; index < startIndex; index++) {
-            //     args[index] = arguments[index];
-            // }
-            // args[startIndex] = rest;
-            // return func.apply(this, args);
-        };
-    }
-
-    function _withoutIndex(iterator) {
-        return function (value, index, callback) {
-            return iterator(value, callback);
-        };
-    }
-
-    //// exported async module functions ////
-
-    //// nextTick implementation with browser-compatible fallback ////
-
-    // capture the global reference to guard against fakeTimer mocks
-    var _setImmediate = typeof setImmediate === 'function' && setImmediate;
-
-    var _delay = _setImmediate ? function(fn) {
-        // not a direct alias for IE10 compatibility
-        _setImmediate(fn);
-    } : function(fn) {
-        setTimeout(fn, 0);
-    };
-
-    if (typeof process === 'object' && typeof process.nextTick === 'function') {
-        async.nextTick = process.nextTick;
-    } else {
-        async.nextTick = _delay;
-    }
-    async.setImmediate = _setImmediate ? _delay : async.nextTick;
-
-
-    async.forEach =
-    async.each = function (arr, iterator, callback) {
-        return async.eachOf(arr, _withoutIndex(iterator), callback);
-    };
-
-    async.forEachSeries =
-    async.eachSeries = function (arr, iterator, callback) {
-        return async.eachOfSeries(arr, _withoutIndex(iterator), callback);
-    };
-
-
-    async.forEachLimit =
-    async.eachLimit = function (arr, limit, iterator, callback) {
-        return _eachOfLimit(limit)(arr, _withoutIndex(iterator), callback);
-    };
-
-    async.forEachOf =
-    async.eachOf = function (object, iterator, callback) {
-        callback = _once(callback || noop);
-        object = object || [];
-
-        var iter = _keyIterator(object);
-        var key, completed = 0;
-
-        while ((key = iter()) != null) {
-            completed += 1;
-            iterator(object[key], key, only_once(done));
-        }
-
-        if (completed === 0) callback(null);
-
-        function done(err) {
-            completed--;
-            if (err) {
-                callback(err);
-            }
-            // Check key is null in case iterator isn't exhausted
-            // and done resolved synchronously.
-            else if (key === null && completed <= 0) {
-                callback(null);
-            }
-        }
-    };
-
-    async.forEachOfSeries =
-    async.eachOfSeries = function (obj, iterator, callback) {
-        callback = _once(callback || noop);
-        obj = obj || [];
-        var nextKey = _keyIterator(obj);
-        var key = nextKey();
-        function iterate() {
-            var sync = true;
-            if (key === null) {
-                return callback(null);
-            }
-            iterator(obj[key], key, only_once(function (err) {
-                if (err) {
-                    callback(err);
-                }
-                else {
-                    key = nextKey();
-                    if (key === null) {
-                        return callback(null);
-                    } else {
-                        if (sync) {
-                            async.setImmediate(iterate);
-                        } else {
-                            iterate();
-                        }
-                    }
-                }
-            }));
-            sync = false;
-        }
-        iterate();
-    };
-
-
-
-    async.forEachOfLimit =
-    async.eachOfLimit = function (obj, limit, iterator, callback) {
-        _eachOfLimit(limit)(obj, iterator, callback);
-    };
-
-    function _eachOfLimit(limit) {
-
-        return function (obj, iterator, callback) {
-            callback = _once(callback || noop);
-            obj = obj || [];
-            var nextKey = _keyIterator(obj);
-            if (limit <= 0) {
-                return callback(null);
-            }
-            var done = false;
-            var running = 0;
-            var errored = false;
-
-            (function replenish () {
-                if (done && running <= 0) {
-                    return callback(null);
-                }
-
-                while (running < limit && !errored) {
-                    var key = nextKey();
-                    if (key === null) {
-                        done = true;
-                        if (running <= 0) {
-                            callback(null);
-                        }
-                        return;
-                    }
-                    running += 1;
-                    iterator(obj[key], key, only_once(function (err) {
-                        running -= 1;
-                        if (err) {
-                            callback(err);
-                            errored = true;
-                        }
-                        else {
-                            replenish();
-                        }
-                    }));
-                }
-            })();
-        };
-    }
-
-
-    function doParallel(fn) {
-        return function (obj, iterator, callback) {
-            return fn(async.eachOf, obj, iterator, callback);
-        };
-    }
-    function doParallelLimit(fn) {
-        return function (obj, limit, iterator, callback) {
-            return fn(_eachOfLimit(limit), obj, iterator, callback);
-        };
-    }
-    function doSeries(fn) {
-        return function (obj, iterator, callback) {
-            return fn(async.eachOfSeries, obj, iterator, callback);
-        };
-    }
-
-    function _asyncMap(eachfn, arr, iterator, callback) {
-        callback = _once(callback || noop);
-        arr = arr || [];
-        var results = _isArrayLike(arr) ? [] : {};
-        eachfn(arr, function (value, index, callback) {
-            iterator(value, function (err, v) {
-                results[index] = v;
-                callback(err);
-            });
-        }, function (err) {
-            callback(err, results);
-        });
-    }
-
-    async.map = doParallel(_asyncMap);
-    async.mapSeries = doSeries(_asyncMap);
-    async.mapLimit = doParallelLimit(_asyncMap);
-
-    // reduce only has a series version, as doing reduce in parallel won't
-    // work in many situations.
-    async.inject =
-    async.foldl =
-    async.reduce = function (arr, memo, iterator, callback) {
-        async.eachOfSeries(arr, function (x, i, callback) {
-            iterator(memo, x, function (err, v) {
-                memo = v;
-                callback(err);
-            });
-        }, function (err) {
-            callback(err, memo);
-        });
-    };
-
-    async.foldr =
-    async.reduceRight = function (arr, memo, iterator, callback) {
-        var reversed = _map(arr, identity).reverse();
-        async.reduce(reversed, memo, iterator, callback);
-    };
-
-    async.transform = function (arr, memo, iterator, callback) {
-        if (arguments.length === 3) {
-            callback = iterator;
-            iterator = memo;
-            memo = _isArray(arr) ? [] : {};
-        }
-
-        async.eachOf(arr, function(v, k, cb) {
-            iterator(memo, v, k, cb);
-        }, function(err) {
-            callback(err, memo);
-        });
-    };
-
-    function _filter(eachfn, arr, iterator, callback) {
-        var results = [];
-        eachfn(arr, function (x, index, callback) {
-            iterator(x, function (v) {
-                if (v) {
-                    results.push({index: index, value: x});
-                }
-                callback();
-            });
-        }, function () {
-            callback(_map(results.sort(function (a, b) {
-                return a.index - b.index;
-            }), function (x) {
-                return x.value;
-            }));
-        });
-    }
-
-    async.select =
-    async.filter = doParallel(_filter);
-
-    async.selectLimit =
-    async.filterLimit = doParallelLimit(_filter);
-
-    async.selectSeries =
-    async.filterSeries = doSeries(_filter);
-
-    function _reject(eachfn, arr, iterator, callback) {
-        _filter(eachfn, arr, function(value, cb) {
-            iterator(value, function(v) {
-                cb(!v);
-            });
-        }, callback);
-    }
-    async.reject = doParallel(_reject);
-    async.rejectLimit = doParallelLimit(_reject);
-    async.rejectSeries = doSeries(_reject);
-
-    function _createTester(eachfn, check, getResult) {
-        return function(arr, limit, iterator, cb) {
-            function done() {
-                if (cb) cb(getResult(false, void 0));
-            }
-            function iteratee(x, _, callback) {
-                if (!cb) return callback();
-                iterator(x, function (v) {
-                    if (cb && check(v)) {
-                        cb(getResult(true, x));
-                        cb = iterator = false;
-                    }
-                    callback();
-                });
-            }
-            if (arguments.length > 3) {
-                eachfn(arr, limit, iteratee, done);
-            } else {
-                cb = iterator;
-                iterator = limit;
-                eachfn(arr, iteratee, done);
-            }
-        };
-    }
-
-    async.any =
-    async.some = _createTester(async.eachOf, toBool, identity);
-
-    async.someLimit = _createTester(async.eachOfLimit, toBool, identity);
-
-    async.all =
-    async.every = _createTester(async.eachOf, notId, notId);
-
-    async.everyLimit = _createTester(async.eachOfLimit, notId, notId);
-
-    function _findGetResult(v, x) {
-        return x;
-    }
-    async.detect = _createTester(async.eachOf, identity, _findGetResult);
-    async.detectSeries = _createTester(async.eachOfSeries, identity, _findGetResult);
-    async.detectLimit = _createTester(async.eachOfLimit, identity, _findGetResult);
-
-    async.sortBy = function (arr, iterator, callback) {
-        async.map(arr, function (x, callback) {
-            iterator(x, function (err, criteria) {
-                if (err) {
-                    callback(err);
-                }
-                else {
-                    callback(null, {value: x, criteria: criteria});
-                }
-            });
-        }, function (err, results) {
-            if (err) {
-                return callback(err);
-            }
-            else {
-                callback(null, _map(results.sort(comparator), function (x) {
-                    return x.value;
-                }));
-            }
-
-        });
-
-        function comparator(left, right) {
-            var a = left.criteria, b = right.criteria;
-            return a < b ? -1 : a > b ? 1 : 0;
-        }
-    };
-
-    async.auto = function (tasks, concurrency, callback) {
-        if (typeof arguments[1] === 'function') {
-            // concurrency is optional, shift the args.
-            callback = concurrency;
-            concurrency = null;
-        }
-        callback = _once(callback || noop);
-        var keys = _keys(tasks);
-        var remainingTasks = keys.length;
-        if (!remainingTasks) {
-            return callback(null);
-        }
-        if (!concurrency) {
-            concurrency = remainingTasks;
-        }
-
-        var results = {};
-        var runningTasks = 0;
-
-        var hasError = false;
-
-        var listeners = [];
-        function addListener(fn) {
-            listeners.unshift(fn);
-        }
-        function removeListener(fn) {
-            var idx = _indexOf(listeners, fn);
-            if (idx >= 0) listeners.splice(idx, 1);
-        }
-        function taskComplete() {
-            remainingTasks--;
-            _arrayEach(listeners.slice(0), function (fn) {
-                fn();
-            });
-        }
-
-        addListener(function () {
-            if (!remainingTasks) {
-                callback(null, results);
-            }
-        });
-
-        _arrayEach(keys, function (k) {
-            if (hasError) return;
-            var task = _isArray(tasks[k]) ? tasks[k]: [tasks[k]];
-            var taskCallback = _restParam(function(err, args) {
-                runningTasks--;
-                if (args.length <= 1) {
-                    args = args[0];
-                }
-                if (err) {
-                    var safeResults = {};
-                    _forEachOf(results, function(val, rkey) {
-                        safeResults[rkey] = val;
-                    });
-                    safeResults[k] = args;
-                    hasError = true;
-
-                    callback(err, safeResults);
-                }
-                else {
-                    results[k] = args;
-                    async.setImmediate(taskComplete);
-                }
-            });
-            var requires = task.slice(0, task.length - 1);
-            // prevent dead-locks
-            var len = requires.length;
-            var dep;
-            while (len--) {
-                if (!(dep = tasks[requires[len]])) {
-                    throw new Error('Has nonexistent dependency in ' + requires.join(', '));
-                }
-                if (_isArray(dep) && _indexOf(dep, k) >= 0) {
-                    throw new Error('Has cyclic dependencies');
-                }
-            }
-            function ready() {
-                return runningTasks < concurrency && _reduce(requires, function (a, x) {
-                    return (a && results.hasOwnProperty(x));
-                }, true) && !results.hasOwnProperty(k);
-            }
-            if (ready()) {
-                runningTasks++;
-                task[task.length - 1](taskCallback, results);
-            }
-            else {
-                addListener(listener);
-            }
-            function listener() {
-                if (ready()) {
-                    runningTasks++;
-                    removeListener(listener);
-                    task[task.length - 1](taskCallback, results);
-                }
-            }
-        });
-    };
-
-
-
-    async.retry = function(times, task, callback) {
-        var DEFAULT_TIMES = 5;
-        var DEFAULT_INTERVAL = 0;
-
-        var attempts = [];
-
-        var opts = {
-            times: DEFAULT_TIMES,
-            interval: DEFAULT_INTERVAL
-        };
-
-        function parseTimes(acc, t){
-            if(typeof t === 'number'){
-                acc.times = parseInt(t, 10) || DEFAULT_TIMES;
-            } else if(typeof t === 'object'){
-                acc.times = parseInt(t.times, 10) || DEFAULT_TIMES;
-                acc.interval = parseInt(t.interval, 10) || DEFAULT_INTERVAL;
-            } else {
-                throw new Error('Unsupported argument type for \'times\': ' + typeof t);
-            }
-        }
-
-        var length = arguments.length;
-        if (length < 1 || length > 3) {
-            throw new Error('Invalid arguments - must be either (task), (task, callback), (times, task) or (times, task, callback)');
-        } else if (length <= 2 && typeof times === 'function') {
-            callback = task;
-            task = times;
-        }
-        if (typeof times !== 'function') {
-            parseTimes(opts, times);
-        }
-        opts.callback = callback;
-        opts.task = task;
-
-        function wrappedTask(wrappedCallback, wrappedResults) {
-            function retryAttempt(task, finalAttempt) {
-                return function(seriesCallback) {
-                    task(function(err, result){
-                        seriesCallback(!err || finalAttempt, {err: err, result: result});
-                    }, wrappedResults);
-                };
-            }
-
-            function retryInterval(interval){
-                return function(seriesCallback){
-                    setTimeout(function(){
-                        seriesCallback(null);
-                    }, interval);
-                };
-            }
-
-            while (opts.times) {
-
-                var finalAttempt = !(opts.times-=1);
-                attempts.push(retryAttempt(opts.task, finalAttempt));
-                if(!finalAttempt && opts.interval > 0){
-                    attempts.push(retryInterval(opts.interval));
-                }
-            }
-
-            async.series(attempts, function(done, data){
-                data = data[data.length - 1];
-                (wrappedCallback || opts.callback)(data.err, data.result);
-            });
-        }
-
-        // If a callback is passed, run this as a controll flow
-        return opts.callback ? wrappedTask() : wrappedTask;
-    };
-
-    async.waterfall = function (tasks, callback) {
-        callback = _once(callback || noop);
-        if (!_isArray(tasks)) {
-            var err = new Error('First argument to waterfall must be an array of functions');
-            return callback(err);
-        }
-        if (!tasks.length) {
-            return callback();
-        }
-        function wrapIterator(iterator) {
-            return _restParam(function (err, args) {
-                if (err) {
-                    callback.apply(null, [err].concat(args));
-                }
-                else {
-                    var next = iterator.next();
-                    if (next) {
-                        args.push(wrapIterator(next));
-                    }
-                    else {
-                        args.push(callback);
-                    }
-                    ensureAsync(iterator).apply(null, args);
-                }
-            });
-        }
-        wrapIterator(async.iterator(tasks))();
-    };
-
-    function _parallel(eachfn, tasks, callback) {
-        callback = callback || noop;
-        var results = _isArrayLike(tasks) ? [] : {};
-
-        eachfn(tasks, function (task, key, callback) {
-            task(_restParam(function (err, args) {
-                if (args.length <= 1) {
-                    args = args[0];
-                }
-                results[key] = args;
-                callback(err);
-            }));
-        }, function (err) {
-            callback(err, results);
-        });
-    }
-
-    async.parallel = function (tasks, callback) {
-        _parallel(async.eachOf, tasks, callback);
-    };
-
-    async.parallelLimit = function(tasks, limit, callback) {
-        _parallel(_eachOfLimit(limit), tasks, callback);
-    };
-
-    async.series = function(tasks, callback) {
-        _parallel(async.eachOfSeries, tasks, callback);
-    };
-
-    async.iterator = function (tasks) {
-        function makeCallback(index) {
-            function fn() {
-                if (tasks.length) {
-                    tasks[index].apply(null, arguments);
-                }
-                return fn.next();
-            }
-            fn.next = function () {
-                return (index < tasks.length - 1) ? makeCallback(index + 1): null;
-            };
-            return fn;
-        }
-        return makeCallback(0);
-    };
-
-    async.apply = _restParam(function (fn, args) {
-        return _restParam(function (callArgs) {
-            return fn.apply(
-                null, args.concat(callArgs)
-            );
-        });
-    });
-
-    function _concat(eachfn, arr, fn, callback) {
-        var result = [];
-        eachfn(arr, function (x, index, cb) {
-            fn(x, function (err, y) {
-                result = result.concat(y || []);
-                cb(err);
-            });
-        }, function (err) {
-            callback(err, result);
-        });
-    }
-    async.concat = doParallel(_concat);
-    async.concatSeries = doSeries(_concat);
-
-    async.whilst = function (test, iterator, callback) {
-        callback = callback || noop;
-        if (test()) {
-            var next = _restParam(function(err, args) {
-                if (err) {
-                    callback(err);
-                } else if (test.apply(this, args)) {
-                    iterator(next);
-                } else {
-                    callback.apply(null, [null].concat(args));
-                }
-            });
-            iterator(next);
-        } else {
-            callback(null);
-        }
-    };
-
-    async.doWhilst = function (iterator, test, callback) {
-        var calls = 0;
-        return async.whilst(function() {
-            return ++calls <= 1 || test.apply(this, arguments);
-        }, iterator, callback);
-    };
-
-    async.until = function (test, iterator, callback) {
-        return async.whilst(function() {
-            return !test.apply(this, arguments);
-        }, iterator, callback);
-    };
-
-    async.doUntil = function (iterator, test, callback) {
-        return async.doWhilst(iterator, function() {
-            return !test.apply(this, arguments);
-        }, callback);
-    };
-
-    async.during = function (test, iterator, callback) {
-        callback = callback || noop;
-
-        var next = _restParam(function(err, args) {
-            if (err) {
-                callback(err);
-            } else {
-                args.push(check);
-                test.apply(this, args);
-            }
-        });
-
-        var check = function(err, truth) {
-            if (err) {
-                callback(err);
-            } else if (truth) {
-                iterator(next);
-            } else {
-                callback(null);
-            }
-        };
-
-        test(check);
-    };
-
-    async.doDuring = function (iterator, test, callback) {
-        var calls = 0;
-        async.during(function(next) {
-            if (calls++ < 1) {
-                next(null, true);
-            } else {
-                test.apply(this, arguments);
-            }
-        }, iterator, callback);
-    };
-
-    function _queue(worker, concurrency, payload) {
-        if (concurrency == null) {
-            concurrency = 1;
-        }
-        else if(concurrency === 0) {
-            throw new Error('Concurrency must not be zero');
-        }
-        function _insert(q, data, pos, callback) {
-            if (callback != null && typeof callback !== "function") {
-                throw new Error("task callback must be a function");
-            }
-            q.started = true;
-            if (!_isArray(data)) {
-                data = [data];
-            }
-            if(data.length === 0 && q.idle()) {
-                // call drain immediately if there are no tasks
-                return async.setImmediate(function() {
-                    q.drain();
-                });
-            }
-            _arrayEach(data, function(task) {
-                var item = {
-                    data: task,
-                    callback: callback || noop
-                };
-
-                if (pos) {
-                    q.tasks.unshift(item);
-                } else {
-                    q.tasks.push(item);
-                }
-
-                if (q.tasks.length === q.concurrency) {
-                    q.saturated();
-                }
-            });
-            async.setImmediate(q.process);
-        }
-        function _next(q, tasks) {
-            return function(){
-                workers -= 1;
-
-                var removed = false;
-                var args = arguments;
-                _arrayEach(tasks, function (task) {
-                    _arrayEach(workersList, function (worker, index) {
-                        if (worker === task && !removed) {
-                            workersList.splice(index, 1);
-                            removed = true;
-                        }
-                    });
-
-                    task.callback.apply(task, args);
-                });
-                if (q.tasks.length + workers === 0) {
-                    q.drain();
-                }
-                q.process();
-            };
-        }
-
-        var workers = 0;
-        var workersList = [];
-        var q = {
-            tasks: [],
-            concurrency: concurrency,
-            payload: payload,
-            saturated: noop,
-            empty: noop,
-            drain: noop,
-            started: false,
-            paused: false,
-            push: function (data, callback) {
-                _insert(q, data, false, callback);
-            },
-            kill: function () {
-                q.drain = noop;
-                q.tasks = [];
-            },
-            unshift: function (data, callback) {
-                _insert(q, data, true, callback);
-            },
-            process: function () {
-                while(!q.paused && workers < q.concurrency && q.tasks.length){
-
-                    var tasks = q.payload ?
-                        q.tasks.splice(0, q.payload) :
-                        q.tasks.splice(0, q.tasks.length);
-
-                    var data = _map(tasks, function (task) {
-                        return task.data;
-                    });
-
-                    if (q.tasks.length === 0) {
-                        q.empty();
-                    }
-                    workers += 1;
-                    workersList.push(tasks[0]);
-                    var cb = only_once(_next(q, tasks));
-                    worker(data, cb);
-                }
-            },
-            length: function () {
-                return q.tasks.length;
-            },
-            running: function () {
-                return workers;
-            },
-            workersList: function () {
-                return workersList;
-            },
-            idle: function() {
-                return q.tasks.length + workers === 0;
-            },
-            pause: function () {
-                q.paused = true;
-            },
-            resume: function () {
-                if (q.paused === false) { return; }
-                q.paused = false;
-                var resumeCount = Math.min(q.concurrency, q.tasks.length);
-                // Need to call q.process once per concurrent
-                // worker to preserve full concurrency after pause
-                for (var w = 1; w <= resumeCount; w++) {
-                    async.setImmediate(q.process);
-                }
-            }
-        };
-        return q;
-    }
-
-    async.queue = function (worker, concurrency) {
-        var q = _queue(function (items, cb) {
-            worker(items[0], cb);
-        }, concurrency, 1);
-
-        return q;
-    };
-
-    async.priorityQueue = function (worker, concurrency) {
-
-        function _compareTasks(a, b){
-            return a.priority - b.priority;
-        }
-
-        function _binarySearch(sequence, item, compare) {
-            var beg = -1,
-                end = sequence.length - 1;
-            while (beg < end) {
-                var mid = beg + ((end - beg + 1) >>> 1);
-                if (compare(item, sequence[mid]) >= 0) {
-                    beg = mid;
-                } else {
-                    end = mid - 1;
-                }
-            }
-            return beg;
-        }
-
-        function _insert(q, data, priority, callback) {
-            if (callback != null && typeof callback !== "function") {
-                throw new Error("task callback must be a function");
-            }
-            q.started = true;
-            if (!_isArray(data)) {
-                data = [data];
-            }
-            if(data.length === 0) {
-                // call drain immediately if there are no tasks
-                return async.setImmediate(function() {
-                    q.drain();
-                });
-            }
-            _arrayEach(data, function(task) {
-                var item = {
-                    data: task,
-                    priority: priority,
-                    callback: typeof callback === 'function' ? callback : noop
-                };
-
-                q.tasks.splice(_binarySearch(q.tasks, item, _compareTasks) + 1, 0, item);
-
-                if (q.tasks.length === q.concurrency) {
-                    q.saturated();
-                }
-                async.setImmediate(q.process);
-            });
-        }
-
-        // Start with a normal queue
-        var q = async.queue(worker, concurrency);
-
-        // Override push to accept second parameter representing priority
-        q.push = function (data, priority, callback) {
-            _insert(q, data, priority, callback);
-        };
-
-        // Remove unshift function
-        delete q.unshift;
-
-        return q;
-    };
-
-    async.cargo = function (worker, payload) {
-        return _queue(worker, 1, payload);
-    };
-
-    function _console_fn(name) {
-        return _restParam(function (fn, args) {
-            fn.apply(null, args.concat([_restParam(function (err, args) {
-                if (typeof console === 'object') {
-                    if (err) {
-                        if (console.error) {
-                            console.error(err);
-                        }
-                    }
-                    else if (console[name]) {
-                        _arrayEach(args, function (x) {
-                            console[name](x);
-                        });
-                    }
-                }
-            })]));
-        });
-    }
-    async.log = _console_fn('log');
-    async.dir = _console_fn('dir');
-    /*async.info = _console_fn('info');
-    async.warn = _console_fn('warn');
-    async.error = _console_fn('error');*/
-
-    async.memoize = function (fn, hasher) {
-        var memo = {};
-        var queues = {};
-        var has = Object.prototype.hasOwnProperty;
-        hasher = hasher || identity;
-        var memoized = _restParam(function memoized(args) {
-            var callback = args.pop();
-            var key = hasher.apply(null, args);
-            if (has.call(memo, key)) {   
-                async.setImmediate(function () {
-                    callback.apply(null, memo[key]);
-                });
-            }
-            else if (has.call(queues, key)) {
-                queues[key].push(callback);
-            }
-            else {
-                queues[key] = [callback];
-                fn.apply(null, args.concat([_restParam(function (args) {
-                    memo[key] = args;
-                    var q = queues[key];
-                    delete queues[key];
-                    for (var i = 0, l = q.length; i < l; i++) {
-                        q[i].apply(null, args);
-                    }
-                })]));
-            }
-        });
-        memoized.memo = memo;
-        memoized.unmemoized = fn;
-        return memoized;
-    };
-
-    async.unmemoize = function (fn) {
-        return function () {
-            return (fn.unmemoized || fn).apply(null, arguments);
-        };
-    };
-
-    function _times(mapper) {
-        return function (count, iterator, callback) {
-            mapper(_range(count), iterator, callback);
-        };
-    }
-
-    async.times = _times(async.map);
-    async.timesSeries = _times(async.mapSeries);
-    async.timesLimit = function (count, limit, iterator, callback) {
-        return async.mapLimit(_range(count), limit, iterator, callback);
-    };
-
-    async.seq = function (/* functions... */) {
-        var fns = arguments;
-        return _restParam(function (args) {
-            var that = this;
-
-            var callback = args[args.length - 1];
-            if (typeof callback == 'function') {
-                args.pop();
-            } else {
-                callback = noop;
-            }
-
-            async.reduce(fns, args, function (newargs, fn, cb) {
-                fn.apply(that, newargs.concat([_restParam(function (err, nextargs) {
-                    cb(err, nextargs);
-                })]));
-            },
-            function (err, results) {
-                callback.apply(that, [err].concat(results));
-            });
-        });
-    };
-
-    async.compose = function (/* functions... */) {
-        return async.seq.apply(null, Array.prototype.reverse.call(arguments));
-    };
-
-
-    function _applyEach(eachfn) {
-        return _restParam(function(fns, args) {
-            var go = _restParam(function(args) {
-                var that = this;
-                var callback = args.pop();
-                return eachfn(fns, function (fn, _, cb) {
-                    fn.apply(that, args.concat([cb]));
-                },
-                callback);
-            });
-            if (args.length) {
-                return go.apply(this, args);
-            }
-            else {
-                return go;
-            }
-        });
-    }
-
-    async.applyEach = _applyEach(async.eachOf);
-    async.applyEachSeries = _applyEach(async.eachOfSeries);
-
-
-    async.forever = function (fn, callback) {
-        var done = only_once(callback || noop);
-        var task = ensureAsync(fn);
-        function next(err) {
-            if (err) {
-                return done(err);
-            }
-            task(next);
-        }
-        next();
-    };
-
-    function ensureAsync(fn) {
-        return _restParam(function (args) {
-            var callback = args.pop();
-            args.push(function () {
-                var innerArgs = arguments;
-                if (sync) {
-                    async.setImmediate(function () {
-                        callback.apply(null, innerArgs);
-                    });
-                } else {
-                    callback.apply(null, innerArgs);
-                }
-            });
-            var sync = true;
-            fn.apply(this, args);
-            sync = false;
-        });
-    }
-
-    async.ensureAsync = ensureAsync;
-
-    async.constant = _restParam(function(values) {
-        var args = [null].concat(values);
-        return function (callback) {
-            return callback.apply(this, args);
-        };
-    });
-
-    async.wrapSync =
-    async.asyncify = function asyncify(func) {
-        return _restParam(function (args) {
-            var callback = args.pop();
-            var result;
-            try {
-                result = func.apply(this, args);
-            } catch (e) {
-                return callback(e);
-            }
-            // if result is Promise object
-            if (_isObject(result) && typeof result.then === "function") {
-                result.then(function(value) {
-                    callback(null, value);
-                })["catch"](function(err) {
-                    callback(err.message ? err : new Error(err));
-                });
-            } else {
-                callback(null, result);
-            }
-        });
-    };
-
-    // Node.js
-    if (typeof module === 'object' && module.exports) {
-        module.exports = async;
-    }
-    // AMD / RequireJS
-    else if (typeof define === 'function' && define.amd) {
-        define([], function () {
-            return async;
-        });
-    }
-    // included directly via <script> tag
-    else {
-        root.async = async;
-    }
-
-}());
-
-}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":25}],21:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 (function (global){
 /*!
  * The buffer module from node.js, for the browser.
@@ -7877,7 +6956,7 @@ function isnan (val) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"base64-js":22,"ieee754":23,"isarray":24}],22:[function(require,module,exports){
+},{"base64-js":23,"ieee754":24,"isarray":25}],23:[function(require,module,exports){
 'use strict'
 
 exports.toByteArray = toByteArray
@@ -7988,7 +7067,7 @@ function fromByteArray (uint8) {
   return parts.join('')
 }
 
-},{}],23:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   var e, m
   var eLen = nBytes * 8 - mLen - 1
@@ -8074,108 +7153,12 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128
 }
 
-},{}],24:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 var toString = {}.toString;
 
 module.exports = Array.isArray || function (arr) {
   return toString.call(arr) == '[object Array]';
 };
-
-},{}],25:[function(require,module,exports){
-// shim for using process in browser
-
-var process = module.exports = {};
-var queue = [];
-var draining = false;
-var currentQueue;
-var queueIndex = -1;
-
-function cleanUpNextTick() {
-    if (!draining || !currentQueue) {
-        return;
-    }
-    draining = false;
-    if (currentQueue.length) {
-        queue = currentQueue.concat(queue);
-    } else {
-        queueIndex = -1;
-    }
-    if (queue.length) {
-        drainQueue();
-    }
-}
-
-function drainQueue() {
-    if (draining) {
-        return;
-    }
-    var timeout = setTimeout(cleanUpNextTick);
-    draining = true;
-
-    var len = queue.length;
-    while(len) {
-        currentQueue = queue;
-        queue = [];
-        while (++queueIndex < len) {
-            if (currentQueue) {
-                currentQueue[queueIndex].run();
-            }
-        }
-        queueIndex = -1;
-        len = queue.length;
-    }
-    currentQueue = null;
-    draining = false;
-    clearTimeout(timeout);
-}
-
-process.nextTick = function (fun) {
-    var args = new Array(arguments.length - 1);
-    if (arguments.length > 1) {
-        for (var i = 1; i < arguments.length; i++) {
-            args[i - 1] = arguments[i];
-        }
-    }
-    queue.push(new Item(fun, args));
-    if (queue.length === 1 && !draining) {
-        setTimeout(drainQueue, 0);
-    }
-};
-
-// v8 likes predictible objects
-function Item(fun, array) {
-    this.fun = fun;
-    this.array = array;
-}
-Item.prototype.run = function () {
-    this.fun.apply(null, this.array);
-};
-process.title = 'browser';
-process.browser = true;
-process.env = {};
-process.argv = [];
-process.version = ''; // empty string to avoid regexp issues
-process.versions = {};
-
-function noop() {}
-
-process.on = noop;
-process.addListener = noop;
-process.once = noop;
-process.off = noop;
-process.removeListener = noop;
-process.removeAllListeners = noop;
-process.emit = noop;
-
-process.binding = function (name) {
-    throw new Error('process.binding is not supported');
-};
-
-process.cwd = function () { return '/' };
-process.chdir = function (dir) {
-    throw new Error('process.chdir is not supported');
-};
-process.umask = function() { return 0; };
 
 },{}],26:[function(require,module,exports){
 (function (Buffer){
@@ -8341,7 +7324,7 @@ if (typeof module === 'object' && module.exports) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":21}],27:[function(require,module,exports){
+},{"buffer":22}],27:[function(require,module,exports){
 !function(e){"use strict";var r=require("./lib/createQueryParameterFromConditionsAndIndices.js").createQueryParameterFromConditionsAndIndices,t=require("./lib/analyzeConditionsFromCriteria.js").analyzeConditionsFromCriteria,a=require("./lib/createIndicesFromObjectStore.js").createIndicesFromObjectStore,o=function(e,o,i){return r(t(e,!1),a(o),i&&i.priority?i.priority:[])},i=function(e,r){var t=r||(0,eval)("this").IDBKeyRange,a=null;if(!t)throw new Error("IDBKeyRange is not available.");if(!e.method)return null;switch(e.method[0]){case"only":a=1===e.value1.length?t[e.method[0]](e.value1[0]):t[e.method[0]](e.value1);break;case"upperBound":a=1===e.value1.length?t[e.method[0]](e.value1[0],e.method[1]):t[e.method[0]](e.value1,e.method[1]);break;case"lowerBound":a=1===e.value2.length?t[e.method[0]](e.value2[0],e.method[1]):t[e.method[0]](e.value2,e.method[1]);break;case"bound":a=1===e.value1.length?t[e.method[0]](e.value1[0],e.value2[0],e.method[1],e.method[2]):t[e.method[0]](e.value1,e.value2,e.method[1],e.method[2])}return a};e.criteria2IDBQuery={createQueryParameter:o,createIDBKeyRange:i}}((0,eval)("this").window||this);
 },{"./lib/analyzeConditionsFromCriteria.js":30,"./lib/createIndicesFromObjectStore.js":31,"./lib/createQueryParameterFromConditionsAndIndices.js":32}],28:[function(require,module,exports){
 !function(t){"use strict";var i=function(){this._keys=[],this._priority_keys=[]};i.prototype.init=function(t,i){for(var r=0,e=t.length;e>r;r+=1)this.set(t[r]);Array.isArray(i)?this._priority_keys=i:""!==i&&null!==i&&void 0!==i&&(this._priority_keys=[i])},i.prototype.set=function(t){this._keys[this._keys.length]={};var i=this._keys.length-1;if(null===t.keyPath)this._keys[i]=[];else if(Array.isArray(t.keyPath))for(var r=0,e=t.keyPath.length;e>r;r+=1)this._keys[i][t.keyPath[r]]=0;else this._keys[i][t.keyPath]=0},i.prototype.calc=function(t){for(var i=0,r=this._keys.length;r>i;i+=1)void 0!==this._keys[i][t]&&(this._keys[i][t]=1)},i.prototype.clone=function(){var t=new i;t._keys=[],t._priority_keys=[];for(var r=0,e=this._keys.length;e>r;r+=1){t._keys[r]||(t._keys[r]={});for(var s in this._keys[r])t._keys[r][s]=0}for(r=0,e=this._priority_keys.length;e>r;r+=1)t._priority_keys[r]=this._priority_keys[r];return t},i.prototype.getResult=function(){for(var t=[],i=0,r=this._keys.length;r>i;i+=1){var e=0,s=0,y=0;for(var n in this._keys[i])e+=1,s+=this._keys[i][n],~this._priority_keys.indexOf(n)&&(y+=1);0!==e&&e===s&&(t[t.length]={index:i,match_num:s,priority_num:y})}return t.sort(function(t,i){return t.priority_num<i.priority_num?1:t.priority_num>i.priority_num?-1:t.match_num<i.match_num?1:t.match_num>i.match_num?-1:0}),t},t.IndexAggregator=i}(this);
@@ -8354,13 +7337,13 @@ if (typeof module === 'object' && module.exports) {
 },{}],32:[function(require,module,exports){
 !function(e){"use strict";var t=require("kriteria").Kriteria||(0,eval)("this").Kriteria,a=require("./IndexAggregator.js").IndexAggregator,l=function(e,l,h){var d=new a,g=0,k=0,o=0,y=0,v=0,p=0,f="",u=[];for(d.init(l,h),g=0,k=e.length;k>g;g+=1){var x=e[g],c=d.clone(),s={store:l[0],method:null,keypath:null,value1:null,value2:null,filter:t.parse({and:x.conditions}).matcher()},m=n(c,x);if(0===m.length)u[u.length]=s;else{var b=[],q=[[],[]],w=[],B=[],A=0;for(o=0,y=m.length;y>o;o+=1){var I=m[o].index,K=[];for(A=l[I],b=[],q=[[],[]],B=[],w=[],v=0,p=x.conditions.length;p>v;v+=1){var P=x.conditions[v],j=A.keyPath.indexOf(P.left_key);~j&&i(P,j,K)}for(f in K)_(K[f],f,{method:w,value:q,method_level:B,target_keypath:b});if(!r(w))break}if(o===m.length&&(b=[],q=[[],[]],B=[],w=[]),w.length>0){var C=[],F=0;for(v=0,p=w.length;p>v;v+=1)void 0!==w[v]&&B[v]>F&&(C=w[v].concat(),F=B[v]);u[u.length]={store:A,method:C,keypath:b,value1:q[0],value2:q[1],filter:t.parse({and:x.conditions}).matcher()}}else u[u.length]=s}}return u},n=function(e,t){for(var a=0,l=t.keys.length;l>a;a+=1)for(var n=0,i=t.conditions.length;i>n;n+=1){var _=t.conditions[n].operator;t.conditions[n].left_key===t.keys[a]&&"value"===t.conditions[n].key_type&&"ne"!==_&&"match"!==_&&"not_match"!==_&&e.calc(t.keys[a])}return e.getResult()},i=function(e,t,a){var l=e.left_key;switch(a[l]||(a[l]={keypath_index:t,val1:null,val2:null,flg_eq:!1,flg_lt:!1,flg_le:!1,flg_gt:!1,flg_ge:!1}),e.operator){case"eq":a[l].flg_eq=!0,a[l].flg_lt=!1,a[l].flg_le=!1,a[l].flg_gt=!1,a[l].flg_ge=!1,a[l].val1=e.right_key[0],a[l].val2=e.right_key[0];break;case"ne":break;case"lt":a[l].flg_eq||(a[l].flg_lt=!0,(null===a[l].val2||a[l].val2>e.right_key[0])&&(a[l].val2=e.right_key[0]));break;case"le":a[l].flg_eq||(a[l].flg_le=!0,a[l].flg_lt=!1,(null===a[l].val2||a[l].val2>e.right_key[0])&&(a[l].val2=e.right_key[0]));break;case"gt":a[l].flg_eq||(a[l].flg_gt=!0,(null===a[l].val1||a[l].val1<e.right_key[0])&&(a[l].val1=e.right_key[0]));break;case"ge":a[l].flg_eq||(a[l].flg_ge=!0,a[l].flg_gt=!1,(null===a[l].val1||a[l].val1<e.right_key[0])&&(a[l].val1=e.right_key[0]));break;case"match":case"not_match":}},_=function(e,t,a){var l=a.method,n=a.value,i=a.method_level,_=a.target_keypath;e.keypath_index>=0&&(void 0===i[e.keypath_index]&&(i[e.keypath_index]=0),e.flg_ge?e.flg_le?(l[e.keypath_index]=["bound",!1,!1],n[0][e.keypath_index]=e.val1,n[1][e.keypath_index]=e.val2,i[e.keypath_index]=2):e.flg_lt?(l[e.keypath_index]=["bound",!0,!1],n[0][e.keypath_index]=e.val1,n[1][e.keypath_index]=e.val2,i[e.keypath_index]=2):i[e.keypath_index]<=1&&(l[e.keypath_index]=["lowerBound",!1],n[1][e.keypath_index]=e.val1,i[e.keypath_index]=3):e.flg_gt?e.flg_le?(l[e.keypath_index]=["bound",!1,!0],n[0][e.keypath_index]=e.val1,n[1][e.keypath_index]=e.val2,i[e.keypath_index]=2):e.flg_lt?(l[e.keypath_index]=["bound",!0,!0],n[0][e.keypath_index]=e.val1,n[1][e.keypath_index]=e.val2,i[e.keypath_index]=2):i[e.keypath_index]<=1&&(l[e.keypath_index]=["lowerBound",!0],n[1][e.keypath_index]=e.val1,i[e.keypath_index]=3):e.flg_le?(l[e.keypath_index]=["upperBound",!1],n[0][e.keypath_index]=e.val2,i[e.keypath_index]=3):e.flg_lt?(l[e.keypath_index]=["upperBound",!0],n[0][e.keypath_index]=e.val2,i[e.keypath_index]=3):e.flg_eq&&(l[e.keypath_index]=["only"],n[0][e.keypath_index]=e.val1,n[1][e.keypath_index]=e.val2,i[e.keypath_index]=1),_[e.keypath_index]=t)},r=function(e){for(var t=!1,a=!1,l=0,n=e.length;n>l;l+=1)switch(e[l][0]){case"lowerBound":t=!0;break;case"upperBound":a=!0}return t&&a?!0:!1};e.createQueryParameterFromConditionsAndIndices=l}(this);
 },{"./IndexAggregator.js":28,"kriteria":33}],33:[function(require,module,exports){
-arguments[4][15][0].apply(exports,arguments)
-},{"./lib/Condition.js":34,"./lib/evaluation.js":35,"./lib/getProperty.js":36,"./lib/matchPrefix.js":37,"dup":15}],34:[function(require,module,exports){
-arguments[4][16][0].apply(exports,arguments)
-},{"dup":16}],35:[function(require,module,exports){
 arguments[4][17][0].apply(exports,arguments)
-},{"./Condition.js":34,"dup":17}],36:[function(require,module,exports){
+},{"./lib/Condition.js":34,"./lib/evaluation.js":35,"./lib/getProperty.js":36,"./lib/matchPrefix.js":37,"dup":17}],34:[function(require,module,exports){
 arguments[4][18][0].apply(exports,arguments)
-},{"dup":18}],37:[function(require,module,exports){
+},{"dup":18}],35:[function(require,module,exports){
 arguments[4][19][0].apply(exports,arguments)
-},{"dup":19}]},{},[1]);
+},{"./Condition.js":34,"dup":19}],36:[function(require,module,exports){
+arguments[4][20][0].apply(exports,arguments)
+},{"dup":20}],37:[function(require,module,exports){
+arguments[4][21][0].apply(exports,arguments)
+},{"dup":21}]},{},[1]);

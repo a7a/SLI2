@@ -1,6 +1,6 @@
 /* SLI2.js */
 
-(function(cxt) {
+(function(cxt, global) {
   "use strict";
 
   var idbInit = require("./lib/idbInit.js").idbInit,
@@ -974,5 +974,6 @@
 
 
   cxt.SLI2 = SLI2;
+  global.SLI2 = SLI2;
 
-})((0, eval)("this").window || this);
+}(this, (0, eval)("this").window || this));

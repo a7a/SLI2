@@ -1,6 +1,6 @@
 {
   "name": "sli2",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Sql Like Interface for IndexedDB (and JSON)",
   "main": "dist/js/node/SLI2.js",
   "repository": {
